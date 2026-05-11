@@ -14,7 +14,7 @@ export const ourFileRouter = {
   // Endpoint untuk Bukti Pengaduan (bisa PDF atau Gambar)
   attachmentUploader: f({
     image: { maxFileSize: "4MB" },
-    pdf: { maxFileSize: "8MB" },
+    pdf: { maxFileSize: "4MB" },
   }).onUploadComplete(async ({ file }) => {
     return { url: file.url };
   }),

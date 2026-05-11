@@ -7,13 +7,26 @@ import { deleteFunc } from "@/utils/DeleteActions";
 import StatusUpdater from "./StatusUpdater";
 import Link from "next/link";
 import { Eye } from "lucide-react";
-import FilterPengaduan from "./FilterPengaduan"; // Import komponen baru
+import FilterPengaduan from "./FilterPengaduan";
+import { StatusPengaduan } from "@prisma/client";
+
+interface PengaduanItem {
+  id: string;
+  namaPelapor: string | null;
+  kontak: string | null;
+  kronologi: string;
+  status: StatusPengaduan;
+  createdAt: Date | string;
+}
 
 export default async function PengaduanPage({
   searchParams,
 }: {
-  // Tambahkan q dan status di definisi promise
-  searchParams?: Promise<{ page?: string; q?: string; status?: string }>;
+  searchParams?: Promise<{
+    page?: string;
+    q?: string;
+    status?: string;
+  }>;
 }) {
   const params = await searchParams;
 
@@ -21,14 +34,14 @@ export default async function PengaduanPage({
   const q = params?.q || "";
   const status = params?.status || "";
 
-  // Masukkan query dan status ke dalam fungsi pengambilan data
+  // Mengambil data pengaduan
   const hasil = await getPengaduan(page, q, status);
 
   return (
     <>
       <Breadcrumb pageName="Manajemen Pengaduan" />
 
-      {/* Komponen Filter & Pencarian */}
+      {/* Filter & Pencarian */}
       <FilterPengaduan />
 
       <ShowcaseSection title="Daftar Laporan Masyarakat" className="space-y-4">
@@ -39,18 +52,23 @@ export default async function PengaduanPage({
                 <th className="px-4 py-4 font-medium text-black dark:text-white">
                   ID Tiket
                 </th>
+
                 <th className="px-4 py-4 font-medium text-black dark:text-white">
                   Pelapor
                 </th>
+
                 <th className="px-4 py-4 font-medium text-black dark:text-white">
                   Kronologi (Cuplikan)
                 </th>
+
                 <th className="px-4 py-4 font-medium text-black dark:text-white">
                   Status
                 </th>
+
                 <th className="px-4 py-4 font-medium text-black dark:text-white">
                   Tanggal
                 </th>
+
                 <th className="px-4 py-4 text-center font-medium text-black dark:text-white">
                   Aksi
                 </th>
@@ -58,35 +76,49 @@ export default async function PengaduanPage({
             </thead>
 
             <tbody>
-              {hasil.data.map((item) => (
+              {hasil.data.map((item: PengaduanItem) => (
                 <tr
                   key={item.id}
                   className="dark:border-strokedark border-b border-stroke"
                 >
+                  {/* ID */}
                   <td className="px-4 py-5">
                     <p className="font-mono text-sm text-gray-500 dark:text-gray-400">
                       {item.id.split("-")[0].toUpperCase()}...
                     </p>
                   </td>
+
+                  {/* Pelapor */}
                   <td className="px-4 py-5">
                     <p className="font-medium text-black dark:text-white">
-                      {item.namaPelapor}
+                      {item.namaPelapor || "Anonim"}
                     </p>
-                    <p className="text-xs text-gray-500">{item.kontak}</p>
+
+                    <p className="text-xs text-gray-500">
+                      {item.kontak || "-"}
+                    </p>
                   </td>
+
+                  {/* Kronologi */}
                   <td className="max-w-[200px] px-4 py-5">
                     <p className="truncate text-sm text-black dark:text-white">
                       {item.kronologi}
                     </p>
                   </td>
+
+                  {/* Status */}
                   <td className="px-4 py-5">
                     <StatusUpdater id={item.id} currentStatus={item.status} />
                   </td>
+
+                  {/* Tanggal */}
                   <td className="px-4 py-5">
                     <p className="text-sm text-black dark:text-white">
                       {new Date(item.createdAt).toLocaleDateString("id-ID")}
                     </p>
                   </td>
+
+                  {/* Aksi */}
                   <td className="px-4 py-5">
                     <div className="flex items-center justify-center space-x-2">
                       <Link
@@ -108,13 +140,14 @@ export default async function PengaduanPage({
                 </tr>
               ))}
 
-              {/* Tampilan jika pencarian/filter tidak menemukan hasil */}
+              {/* Empty State */}
               {hasil.data.length === 0 && (
                 <tr>
                   <td colSpan={6} className="py-12 text-center">
                     <p className="font-medium text-gray-500">
                       Data pengaduan tidak ditemukan.
                     </p>
+
                     {q || status ? (
                       <p className="mt-1 text-sm text-gray-400">
                         Coba gunakan kata kunci atau filter status yang berbeda.
@@ -127,7 +160,7 @@ export default async function PengaduanPage({
           </table>
         </div>
 
-        {/* Paginasi tetap akan mengikuti total data yang tersaring */}
+        {/* Pagination */}
         <Pagination
           currentPage={hasil.current_page}
           lastPage={hasil.last_page}

@@ -18,7 +18,7 @@ export default function Footer() {
               yang adil.
             </p>
             <p className="text-sm font-semibold italic tracking-wide text-[#b91c1c]">
-              "Lihat, Dengar, Rasakan, dan Lakukan!"
+              Lihat, Dengar, Rasakan, dan Lakukan!
             </p>
           </div>
 

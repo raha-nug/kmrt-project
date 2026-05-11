@@ -11,6 +11,7 @@ import {
   FileText,
   Image as ImageIcon,
 } from "lucide-react";
+import Image from "next/image";
 
 export default async function DetailPengaduanPage({
   params,
@@ -192,8 +193,10 @@ export default async function DetailPengaduanPage({
                       rel="noreferrer"
                       className="group relative block w-full"
                     >
-                      <img
+                      <Image
                         src={pengaduan.bukti}
+                        height={100}
+                        width={1000}
                         alt="Bukti Laporan"
                         className="max-h-[600px] w-full object-contain"
                       />

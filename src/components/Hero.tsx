@@ -81,7 +81,7 @@ export default function Hero() {
                   />
                 </svg>
                 <h3 className="mb-4 font-serif text-3xl font-bold italic text-white">
-                  "Lihat, Dengar, Rasakan, dan Lakukan!"
+                  Lihat, Dengar, Rasakan, dan Lakukan!
                 </h3>
                 <p className="text-sm font-light leading-relaxed text-gray-400">
                   Motto perjuangan KMRT untuk transparansi dan keadilan.

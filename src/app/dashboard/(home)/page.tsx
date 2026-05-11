@@ -28,10 +28,6 @@ export default async function DashboardPage() {
         <h1 className="mb-2 text-2xl font-bold text-gray-900 dark:text-white">
           Selamat Datang, {user?.name || "Admin"}
         </h1>
-        <p className="text-sm font-medium text-gray-500">
-          Anda login menggunakan hak akses:{" "}
-          <span className="font-bold uppercase text-[#b91c1c]">{role}</span>
-        </p>
       </div>
 
       {/* Grid Kartu Total Data */}

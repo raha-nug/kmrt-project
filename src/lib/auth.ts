@@ -1,5 +1,5 @@
 // src/lib/auth.ts
-import { NextAuthOptions, User } from "next-auth";
+import type { AuthOptions, User } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import prisma from "@/lib/prisma";
 import bcrypt from "bcrypt";
@@ -13,7 +13,7 @@ interface CustomUser {
   role: string;
 }
 
-export const authOptions: NextAuthOptions = {
+export const authOptions: AuthOptions = {
   providers: [
     CredentialsProvider({
       name: "Credentials",

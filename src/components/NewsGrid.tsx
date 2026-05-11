@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 
 export default function NewsGrid() {
@@ -55,9 +56,11 @@ export default function NewsGrid() {
           {/* Berita Utama (Kiri) */}
           <div className="group flex flex-col overflow-hidden border border-gray-100 bg-white transition-all duration-300 hover:border-gray-200 hover:shadow-2xl lg:col-span-7">
             <div className="relative h-72 w-full overflow-hidden sm:h-96">
-              <img
+              <Image
                 src={headline.gambar}
                 alt={headline.judul}
+                height={100}
+                width={100}
                 className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
               />
               <div className="absolute inset-0 bg-black/30 transition-colors group-hover:bg-black/10"></div>

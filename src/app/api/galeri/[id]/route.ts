@@ -2,13 +2,13 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 
 interface Params {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 // DELETE: Menghapus foto dari galeri
 export async function DELETE(req: Request, { params }: Params) {
   try {
-    const id = params.id;
+    const { id } = await params;
 
     // Opsional: Cek apakah data ada sebelum dihapus
     const item = await prisma.galeri.findUnique({
@@ -32,6 +32,7 @@ export async function DELETE(req: Request, { params }: Params) {
     );
   } catch (error) {
     console.error("DELETE_GALERI_ERROR:", error);
+
     return NextResponse.json(
       { error: "Gagal menghapus data" },
       { status: 500 },
@@ -39,11 +40,13 @@ export async function DELETE(req: Request, { params }: Params) {
   }
 }
 
-// GET UNIQUE: Mengambil satu data galeri (opsional)
+// GET UNIQUE: Mengambil satu data galeri
 export async function GET(req: Request, { params }: Params) {
   try {
+    const { id } = await params;
+
     const item = await prisma.galeri.findUnique({
-      where: { id: params.id },
+      where: { id },
     });
 
     if (!item) {

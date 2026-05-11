@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 
 export default function GallerySection() {
@@ -40,9 +41,11 @@ export default function GallerySection() {
               key={item.id}
               className="group relative aspect-[4/3] overflow-hidden bg-white"
             >
-              <img
+              <Image
                 src={item.gambar}
                 alt={item.judul}
+                height={100}
+                width={100}
                 className="h-full w-full object-cover transition-transform duration-1000 group-hover:scale-110 group-hover:blur-sm"
               />
 

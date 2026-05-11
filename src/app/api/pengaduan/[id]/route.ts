@@ -2,14 +2,16 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 
 interface Params {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 // GET UNIQUE: Lihat detail pengaduan tertentu
 export async function GET(req: Request, { params }: Params) {
   try {
+    const { id } = await params;
+
     const data = await prisma.pengaduan.findUnique({
-      where: { id: params.id },
+      where: { id },
     });
 
     if (!data) {
@@ -25,14 +27,16 @@ export async function GET(req: Request, { params }: Params) {
   }
 }
 
-// PATCH: Admin mengubah status pengaduan (MENUNGGU -> DIPROSES -> SELESAI/DITOLAK)
+// PATCH: Admin mengubah status pengaduan
 export async function PATCH(req: Request, { params }: Params) {
   try {
+    const { id } = await params;
     const body = await req.json();
     const { status } = body;
 
-    // Validasi apakah status yang dikirim sesuai dengan Enum di Prisma
+    // Validasi status
     const validStatus = ["MENUNGGU", "DIPROSES", "SELESAI", "DITOLAK"];
+
     if (status && !validStatus.includes(status)) {
       return NextResponse.json(
         { error: "Status tidak valid" },
@@ -41,13 +45,14 @@ export async function PATCH(req: Request, { params }: Params) {
     }
 
     const updated = await prisma.pengaduan.update({
-      where: { id: params.id },
+      where: { id },
       data: { status },
     });
 
     return NextResponse.json(updated);
   } catch (error) {
     console.error("PATCH_PENGADUAN_ERROR:", error);
+
     return NextResponse.json(
       { error: "Gagal memperbarui status" },
       { status: 500 },
@@ -58,11 +63,15 @@ export async function PATCH(req: Request, { params }: Params) {
 // DELETE: Admin menghapus pengaduan
 export async function DELETE(req: Request, { params }: Params) {
   try {
+    const { id } = await params;
+
     await prisma.pengaduan.delete({
-      where: { id: params.id },
+      where: { id },
     });
 
-    return NextResponse.json({ message: "Pengaduan berhasil dihapus" });
+    return NextResponse.json({
+      message: "Pengaduan berhasil dihapus",
+    });
   } catch (error) {
     return NextResponse.json(
       { error: "Gagal menghapus data" },

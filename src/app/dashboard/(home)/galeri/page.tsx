@@ -8,13 +8,22 @@ import { deleteFunc } from "@/utils/DeleteActions";
 import { getGaleri } from "./actions";
 import Pagination from "@/components/ui-elements/Pagination";
 
+interface GaleriItem {
+  id: string;
+  judul: string;
+  gambar: string;
+  createdAt: Date | string;
+}
+
 export default async function GaleriPage({
   searchParams,
 }: {
   searchParams?: Promise<{ page?: string }>;
 }) {
   const params = await searchParams;
+
   const page = Number(params?.page ?? 1);
+
   const hasil = await getGaleri(page);
 
   return (
@@ -23,11 +32,11 @@ export default async function GaleriPage({
 
       <ShowcaseSection title="Foto Galeri" className="space-y-4">
         <div className="flex justify-end">
-          <Link href={"/dashboard/galeri/add"}>
+          <Link href="/dashboard/galeri/add">
             <Button
-              size={"small"}
-              variant={"primary"}
-              shape={"rounded"}
+              size="small"
+              variant="primary"
+              shape="rounded"
               label="+ Tambah Foto"
             />
           </Link>
@@ -45,7 +54,7 @@ export default async function GaleriPage({
             </thead>
 
             <tbody>
-              {hasil.data.map((item) => (
+              {hasil.data.map((item: GaleriItem) => (
                 <tr key={item.id} className="border-t hover:bg-gray-50">
                   <td className="p-3">
                     <div className="relative h-16 w-24 overflow-hidden rounded border">
@@ -57,10 +66,13 @@ export default async function GaleriPage({
                       />
                     </div>
                   </td>
+
                   <td className="p-3 font-medium">{item.judul}</td>
+
                   <td className="p-3">
                     {new Date(item.createdAt).toLocaleDateString("id-ID")}
                   </td>
+
                   <td className="flex justify-center gap-2 p-3">
                     <DeleteButton
                       id={item.id}
@@ -71,6 +83,14 @@ export default async function GaleriPage({
                   </td>
                 </tr>
               ))}
+
+              {hasil.data.length === 0 && (
+                <tr>
+                  <td colSpan={4} className="py-10 text-center text-gray-500">
+                    Belum ada data galeri.
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>

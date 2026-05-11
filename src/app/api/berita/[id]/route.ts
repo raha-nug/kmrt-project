@@ -2,14 +2,16 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 
 interface Params {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 // GET UNIQUE: Ambil detail satu berita
 export async function GET(req: Request, { params }: Params) {
   try {
+    const { id } = await params;
+
     const berita = await prisma.berita.findUnique({
-      where: { id: params.id },
+      where: { id },
     });
 
     if (!berita) {
@@ -31,6 +33,7 @@ export async function GET(req: Request, { params }: Params) {
 // PATCH: Update berita
 export async function PATCH(req: Request, { params }: Params) {
   try {
+    const { id } = await params;
     const body = await req.json();
 
     // Jika judul diupdate, slug juga harus diupdate agar tetap relevan
@@ -45,13 +48,14 @@ export async function PATCH(req: Request, { params }: Params) {
     }
 
     const updatedBerita = await prisma.berita.update({
-      where: { id: params.id },
+      where: { id },
       data: body,
     });
 
     return NextResponse.json(updatedBerita, { status: 200 });
   } catch (error) {
     console.error("PATCH_BERITA_ERROR:", error);
+
     return NextResponse.json(
       { error: "Gagal mengupdate berita" },
       { status: 500 },
@@ -62,8 +66,10 @@ export async function PATCH(req: Request, { params }: Params) {
 // DELETE: Hapus berita
 export async function DELETE(req: Request, { params }: Params) {
   try {
+    const { id } = await params;
+
     await prisma.berita.delete({
-      where: { id: params.id },
+      where: { id },
     });
 
     return NextResponse.json(
@@ -72,6 +78,7 @@ export async function DELETE(req: Request, { params }: Params) {
     );
   } catch (error) {
     console.error("DELETE_BERITA_ERROR:", error);
+
     return NextResponse.json(
       { error: "Gagal menghapus berita" },
       { status: 500 },

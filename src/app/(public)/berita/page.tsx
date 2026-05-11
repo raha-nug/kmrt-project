@@ -4,6 +4,15 @@ import { Newspaper, Calendar, ArrowRight } from "lucide-react";
 import { getBerita } from "@/app/dashboard/(home)/berita/actions";
 import Pagination from "@/components/ui-elements/Pagination";
 
+interface Berita {
+  id: string;
+  slug: string;
+  judul: string;
+  gambar?: string | null;
+  konten: string;
+  createdAt: Date | string;
+}
+
 export default async function BeritaPage({
   searchParams,
 }: {
@@ -20,13 +29,17 @@ export default async function BeritaPage({
       {/* --- HERO SECTION --- */}
       <section className="relative bg-gray-950 py-16 text-white md:py-24">
         <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10"></div>
+
         <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="max-w-3xl">
             <h2 className="mb-4 flex items-center gap-2 text-sm font-bold uppercase tracking-[0.3em] text-[#b91c1c]">
-              <Newspaper className="h-5 w-5" /> Pusat Informasi
+              <Newspaper className="h-5 w-5" />
+              Pusat Informasi
             </h2>
+
             <h1 className="font-serif text-4xl font-extrabold leading-tight md:text-5xl">
-              Kabar Terkini & <br /> Pernyataan Sikap
+              Kabar Terkini & <br />
+              Pernyataan Sikap
             </h1>
           </div>
         </div>
@@ -37,7 +50,7 @@ export default async function BeritaPage({
         <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col gap-10">
             {hasil.data.length > 0 ? (
-              hasil.data.map((berita) => (
+              hasil.data.map((berita: Berita) => (
                 <article
                   key={berita.id}
                   className="group flex flex-col gap-6 border-b border-gray-200 pb-10 md:flex-row"
@@ -61,6 +74,7 @@ export default async function BeritaPage({
                   <div className="flex w-full flex-col justify-center md:w-3/5">
                     <div className="mb-3 flex items-center text-xs font-bold uppercase tracking-widest text-gray-500">
                       <Calendar className="mr-2 h-4 w-4 text-[#b91c1c]" />
+
                       {new Date(berita.createdAt).toLocaleDateString("id-ID", {
                         day: "numeric",
                         month: "long",
@@ -75,7 +89,7 @@ export default async function BeritaPage({
                     </Link>
 
                     <p className="mb-6 line-clamp-3 text-gray-600">
-                      {/* Membersihkan tag HTML dari Rich Text Editor untuk preview/excerpt */}
+                      {/* Membersihkan tag HTML dari Rich Text Editor */}
                       {berita.konten.replace(/<[^>]*>?/gm, "")}
                     </p>
 
@@ -84,7 +98,7 @@ export default async function BeritaPage({
                         href={`/berita/${berita.slug}`}
                         className="inline-flex items-center text-sm font-bold uppercase tracking-widest text-[#b91c1c] transition-colors hover:text-gray-950"
                       >
-                        Baca Selengkapnya{" "}
+                        Baca Selengkapnya
                         <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-2" />
                       </Link>
                     </div>
@@ -94,9 +108,11 @@ export default async function BeritaPage({
             ) : (
               <div className="border border-dashed border-gray-300 bg-gray-50 py-20 text-center">
                 <Newspaper className="mx-auto mb-4 h-12 w-12 text-gray-300" />
+
                 <h3 className="text-xl font-bold text-gray-900">
                   Belum Ada Publikasi
                 </h3>
+
                 <p className="mt-2 text-gray-500">
                   Kabar terkini dan rilis pers KMRT akan segera diperbarui.
                 </p>

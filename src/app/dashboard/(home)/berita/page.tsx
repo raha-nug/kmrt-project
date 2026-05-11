@@ -5,15 +5,32 @@ import { getBerita } from "./actions";
 import Pagination from "@/components/ui-elements/Pagination";
 import DeleteButton from "@/components/DeleteButton";
 import { deleteFunc } from "@/utils/DeleteActions";
-import { Plus, Edit, Eye } from "lucide-react";
+import { Plus, Edit } from "lucide-react";
 import FilterBerita from "./FilterBerita";
+
+interface Kategori {
+  nama: string;
+}
+
+interface BeritaItem {
+  id: string;
+  judul: string;
+  createdAt: Date | string;
+  published: boolean;
+  kategori?: Kategori | null;
+}
 
 export default async function BeritaPage({
   searchParams,
 }: {
-  searchParams?: Promise<{ page?: string; q?: string; status?: string }>;
+  searchParams?: Promise<{
+    page?: string;
+    q?: string;
+    status?: string;
+  }>;
 }) {
   const params = await searchParams;
+
   const page = Number(params?.page ?? 1);
   const q = params?.q || "";
   const status = params?.status || "";
@@ -25,12 +42,12 @@ export default async function BeritaPage({
       <Breadcrumb pageName="Manajemen Berita" />
 
       <div className="mb-6 flex items-center justify-end">
-        
         <Link
           href="/dashboard/berita/add"
           className="flex items-center gap-2 rounded-xl bg-gray-900 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition-all hover:bg-opacity-90 dark:bg-primary"
         >
-          <Plus className="h-4 w-4" /> Tambah Berita
+          <Plus className="h-4 w-4" />
+          Tambah Berita
         </Link>
       </div>
 
@@ -44,20 +61,23 @@ export default async function BeritaPage({
                 <th className="px-6 py-4 font-semibold text-gray-900 dark:text-white">
                   Judul Berita
                 </th>
+
                 <th className="px-6 py-4 font-semibold text-gray-900 dark:text-white">
                   Kategori
                 </th>
-                
+
                 <th className="px-6 py-4 text-center font-semibold text-gray-900 dark:text-white">
                   Status
                 </th>
+
                 <th className="px-6 py-4 text-center font-semibold text-gray-900 dark:text-white">
                   Aksi
                 </th>
               </tr>
             </thead>
+
             <tbody>
-              {hasil.data.map((item) => (
+              {hasil.data.map((item: BeritaItem) => (
                 <tr
                   key={item.id}
                   className="dark:border-strokedark dark:hover:bg-meta-4/10 border-b border-stroke transition-colors hover:bg-gray-50"
@@ -69,16 +89,18 @@ export default async function BeritaPage({
                     >
                       {item.judul}
                     </p>
+
                     <p className="mt-1 text-xs text-gray-500">
                       {new Date(item.createdAt).toLocaleDateString("id-ID")}
                     </p>
                   </td>
+
                   <td className="px-6 py-5">
                     <span className="dark:bg-meta-4 rounded-md bg-gray-100 px-2 py-1 text-xs text-gray-600 dark:text-gray-300">
                       {item.kategori?.nama || "Umum"}
                     </span>
                   </td>
-                  
+
                   <td className="px-6 py-5 text-center">
                     <span
                       className={`inline-flex rounded-full px-3 py-1 text-xs font-bold ${
@@ -90,6 +112,7 @@ export default async function BeritaPage({
                       {item.published ? "Published" : "Draft"}
                     </span>
                   </td>
+
                   <td className="px-6 py-5 text-center">
                     <div className="flex items-center justify-center gap-3">
                       <Link
@@ -98,6 +121,7 @@ export default async function BeritaPage({
                       >
                         <Edit className="h-5 w-5" />
                       </Link>
+
                       <DeleteButton
                         id={item.id}
                         deleteAction={deleteFunc}
@@ -108,6 +132,7 @@ export default async function BeritaPage({
                   </td>
                 </tr>
               ))}
+
               {hasil.data.length === 0 && (
                 <tr>
                   <td colSpan={5} className="py-12 text-center text-gray-500">

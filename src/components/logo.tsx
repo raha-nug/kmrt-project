@@ -1,4 +1,3 @@
-import darkLogo from "@/assets/logos/dark.svg";
 import Image from "next/image";
 
 export function Logo() {
@@ -8,15 +7,6 @@ export function Logo() {
         src={"/images/logo/logo.png"}
         fill
         className="dark:hidden"
-        alt="Sthg logo"
-        role="presentation"
-        quality={100}
-      />
-
-      <Image
-        src={darkLogo}
-        fill
-        className="hidden dark:block"
         alt="Sthg logo"
         role="presentation"
         quality={100}
