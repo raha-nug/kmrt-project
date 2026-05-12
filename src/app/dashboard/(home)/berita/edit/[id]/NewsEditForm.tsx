@@ -1,32 +1,42 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import Swal from "sweetalert2";
 
-import InputGroup from "@/components/FormElements/InputGroup";
+import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
+import { ShowcaseSection } from "@/components/Layouts/showcase-section";
 import { SubmitButton } from "@/components/FormElements/SubmitButton";
+import InputGroup from "@/components/FormElements/InputGroup";
 import RichTextEditor from "@/components/FormElements/Editor";
-
-import { updateNews, deleteImageFromUT } from "../../actions";
+import SwitcherOne from "@/components/FormElements/Switchers/SwitcherOne";
 import { useUploadThing } from "@/utils/uploadthing";
+import {
+  updateNews,
+  deleteImageFromUT,
+  getAllKategoriForForm,
+} from "../../actions";
 
 export default function NewsEditForm({ news }: { news: any }) {
   const router = useRouter();
 
-  // State untuk Gambar
+  // --- STATE UPLOAD ---
   const [imageUrl, setImageUrl] = useState<string>(news.gambar || "");
   const [imageKey, setImageKey] = useState<string>(""); // Key untuk gambar BARU
   const [isUploading, setIsUploading] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
-
-  // State untuk validasi tombol (Controlled inputs)
-  const [title, setTitle] = useState(news.judul || "");
-
-  // Ref untuk melacak key gambar baru yang diupload saat proses edit
   const newImageKeyRef = useRef("");
 
+  // --- STATE FORM DATA ---
+  const [title, setTitle] = useState(news.judul || "");
+  const [kategoriId, setKategoriId] = useState(news.kategoriId || "");
+  const [categories, setCategories] = useState<{ id: string; nama: string }[]>(
+    [],
+  );
+  const [isLoadingCategories, setIsLoadingCategories] = useState(true);
+
+  // Sync Ref dengan Key terbaru untuk cleanup
   useEffect(() => {
     newImageKeyRef.current = imageKey;
   }, [imageKey]);
@@ -45,21 +55,33 @@ export default function NewsEditForm({ news }: { news: any }) {
 
     return () => {
       window.removeEventListener("beforeunload", handleBeforeUnload);
-      // Jika user pindah page dan ada image BARU yang belum di-submit, hapus
       if (newImageKeyRef.current && !isSubmitted) {
         deleteImageFromUT(newImageKeyRef.current);
       }
     };
   }, [isSubmitted]);
 
+  // Ambil data kategori
+  useEffect(() => {
+    async function fetchCategories() {
+      try {
+        const data = await getAllKategoriForForm();
+        setCategories(data);
+      } finally {
+        setIsLoadingCategories(false);
+      }
+    }
+    fetchCategories();
+  }, []);
+
   const { startUpload } = useUploadThing("imageUploader", {
     onClientUploadComplete: (res) => {
       setIsUploading(false);
       setImageUrl(res[0].url);
-      setImageKey(res[0].key); // Simpan key gambar baru
+      setImageKey(res[0].key);
       Swal.fire({
         icon: "success",
-        title: "Gambar baru terupload!",
+        title: "Gambar diperbarui!",
         timer: 1000,
         showConfirmButton: false,
       });
@@ -78,20 +100,19 @@ export default function NewsEditForm({ news }: { news: any }) {
   };
 
   const handleRemoveImage = async () => {
-    // Jika yang dihapus adalah gambar yang baru saja diupload
     if (imageKey) {
+      // Hapus file baru dari storage
       await deleteImageFromUT(imageKey);
       setImageKey("");
       setImageUrl("");
     } else {
-      // Jika yang dihapus adalah gambar lama dari DB, cukup kosongkan preview
-      // (File asli di cloud tidak dihapus sampai form disubmit/tergantung kebijakan Anda)
+      // Cukup kosongkan preview untuk gambar lama
       setImageUrl("");
     }
   };
 
-  // Validasi: Pastikan judul tidak kosong dan ada gambar
-  const isFormValid = title.trim() !== "" && imageUrl !== "" && !isUploading;
+  const isFormValid =
+    title.trim() !== "" && kategoriId !== "" && imageUrl !== "" && !isUploading;
 
   async function handleClientAction(formData: FormData) {
     if (!isFormValid) return;
@@ -101,7 +122,7 @@ export default function NewsEditForm({ news }: { news: any }) {
     const result = await updateNews(formData);
 
     if (result.success) {
-      setIsSubmitted(true); // Flag agar cleanup tidak menghapus gambar baru
+      setIsSubmitted(true);
       await Swal.fire({
         icon: "success",
         title: "Berhasil",
@@ -112,19 +133,16 @@ export default function NewsEditForm({ news }: { news: any }) {
       router.push("/dashboard/berita");
       router.refresh();
     } else {
-      Swal.fire({
-        icon: "error",
-        title: "Gagal",
-        text: result.message || "Terjadi kesalahan.",
-      });
+      Swal.fire({ icon: "error", title: "Gagal", text: result.message });
     }
   }
 
   return (
-    <form action={handleClientAction} className="space-y-4">
+    <form action={handleClientAction} className="max-w-4xl space-y-6">
       {/* Hidden ID */}
       <input type="hidden" name="id" defaultValue={news.id} />
 
+      {/* 1. Judul Berita */}
       <InputGroup
         label="Judul Berita"
         type="text"
@@ -134,65 +152,108 @@ export default function NewsEditForm({ news }: { news: any }) {
         required
       />
 
-      {/* Image Upload Section */}
+      {/* 2. Kategori */}
+      <div className="space-y-2">
+        <label className="block text-sm font-medium text-black dark:text-white">
+          Kategori Berita <span className="text-red-500">*</span>
+        </label>
+        <select
+          name="kategoriId"
+          value={kategoriId}
+          onChange={(e) => setKategoriId(e.target.value)}
+          required
+          className="dark:border-form-strokedark dark:bg-form-input w-full rounded-lg border-[1.5px] border-stroke bg-transparent px-5 py-[11px] text-sm text-black outline-none transition focus:border-primary active:border-primary dark:text-white"
+        >
+          <option value="">Pilih Kategori</option>
+          {categories.map((cat) => (
+            <option key={cat.id} value={cat.id}>
+              {cat.nama}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* 3. Ringkasan */}
+      <div className="space-y-2">
+        <label className="block text-sm font-medium text-black dark:text-white">
+          Ringkasan Berita{" "}
+          <span className="ml-1 text-xs font-normal text-slate-400">
+            (Preview)
+          </span>
+        </label>
+        <textarea
+          name="ringkasan"
+          rows={3}
+          defaultValue={news.ringkasan}
+          placeholder="Tuliskan ringkasan singkat isi berita..."
+          className="dark:border-form-strokedark dark:bg-form-input w-full rounded-lg border-[1.5px] border-stroke bg-transparent px-5 py-3 text-sm text-black outline-none transition focus:border-primary active:border-primary dark:text-white"
+        ></textarea>
+      </div>
+
+      {/* 4. Gambar Utama */}
       <div className="space-y-3">
         <label className="block text-sm font-medium text-black dark:text-white">
-          Gambar Berita{" "}
+          Gambar Utama{" "}
           {isUploading && (
-            <span className="ml-2 animate-pulse text-primary">
-              (Mengunggah...)
+            <span className="ml-2 animate-pulse text-xs font-normal text-primary">
+              (Upload...)
             </span>
           )}
         </label>
 
-        <div className="flex flex-col gap-4">
-          {imageUrl && (
-            <div className="relative h-48 w-full overflow-hidden rounded-lg border border-stroke md:w-1/2">
-              <Image
-                src={imageUrl}
-                alt="Preview"
-                fill
-                className="object-cover"
-              />
-              <button
-                type="button"
-                onClick={handleRemoveImage}
-                className="absolute right-2 top-2 rounded-full bg-red-500 p-1 text-white shadow-md hover:bg-red-600"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="16"
-                  height="16"
-                  fill="currentColor"
-                  viewBox="0 0 16 16"
-                >
-                  <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z" />
-                </svg>
-              </button>
-            </div>
-          )}
-
-          {!imageUrl && (
+        {!imageUrl ? (
+          <div className="dark:border-strokedark dark:bg-meta-4 group relative flex h-32 w-full max-w-lg cursor-pointer items-center justify-center rounded-xl border-2 border-dashed border-stroke bg-gray-50 transition hover:border-primary">
             <input
               type="file"
               accept="image/*"
               onChange={handleFileChange}
-              disabled={isUploading}
-              className="file:bg-whiter w-full cursor-pointer rounded-lg border-[1.5px] border-stroke bg-transparent font-medium outline-none transition file:mr-5 file:border-collapse file:cursor-pointer file:border-0 file:border-r file:border-solid file:border-stroke file:px-5 file:py-3 file:hover:bg-primary focus:border-primary disabled:bg-gray-2"
+              className="absolute inset-0 z-10 h-full w-full cursor-pointer opacity-0"
             />
-          )}
-        </div>
+            <div className="flex flex-col items-center justify-center space-y-1 text-center">
+              <span className="text-sm font-medium text-slate-500">
+                Ganti Gambar
+              </span>
+            </div>
+          </div>
+        ) : (
+          <div className="relative h-48 w-full max-w-sm overflow-hidden rounded-xl border border-stroke shadow-sm">
+            <Image src={imageUrl} alt="Preview" fill className="object-cover" />
+            <button
+              type="button"
+              onClick={handleRemoveImage}
+              className="absolute right-2 top-2 rounded-full bg-red-500 p-1.5 text-white shadow-lg transition-transform hover:scale-110"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                fill="currentColor"
+                viewBox="0 0 16 16"
+              >
+                <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z" />
+              </svg>
+            </button>
+          </div>
+        )}
       </div>
 
+      {/* 5. Status Publikasi */}
+      <div className="dark:border-strokedark flex items-center gap-6 border-y border-dashed border-stroke py-2">
+        <label className="text-sm font-medium text-black dark:text-white">
+          Status Publish
+        </label>
+        <SwitcherOne name="published" defaultValue={news.published} />
+      </div>
+
+      {/* 6. Editor Isi Konten */}
       <RichTextEditor
-        label="Konten Berita"
+        label="Isi Konten Berita"
         name="content"
         defaultValue={news.konten}
-        placeholder="Tulis detail berita di sini..."
       />
 
-      <div className="flex justify-end pt-4">
-        <SubmitButton disabled={!isFormValid} />
+      <div className="dark:border-strokedark flex items-center justify-end border-t border-stroke pt-6">
+        <SubmitButton disabled={!isFormValid || isLoadingCategories} />
       </div>
     </form>
   );

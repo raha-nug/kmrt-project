@@ -97,7 +97,9 @@ export async function addNews(formData: FormData) {
     const image = formData.get("image") as string;
     const kategoriId = formData.get("kategoriId") as string;
     const ringkasan = formData.get("ringkasan") as string;
-    const published = formData.get("published") === "true";
+
+    // PERBAIKAN: SwitcherOne mengirim "1" jika aktif
+    const published = formData.get("published") === "1";
 
     if (!title || !content || !kategoriId || !image) {
       return {
@@ -143,7 +145,9 @@ export async function updateNews(formData: FormData) {
     const image = formData.get("image") as string;
     const kategoriId = formData.get("kategoriId") as string;
     const ringkasan = formData.get("ringkasan") as string;
-    const published = formData.get("published") === "true";
+
+    // PERBAIKAN: SwitcherOne mengirim "1" jika aktif
+    const published = formData.get("published") === "1";
 
     if (!id || !title || !content || !kategoriId) {
       return { success: false, message: "Field wajib tidak boleh kosong!" };

@@ -7,6 +7,7 @@ import DeleteButton from "@/components/DeleteButton";
 import { deleteFunc } from "@/utils/DeleteActions";
 import { Plus, Edit } from "lucide-react";
 import FilterBerita from "./FilterBerita";
+import { Button } from "@/components/ui-elements/button"; // Menggunakan button yang sama dengan Galeri
 
 interface Kategori {
   nama: string;
@@ -41,36 +42,35 @@ export default async function BeritaPage({
     <>
       <Breadcrumb pageName="Manajemen Berita" />
 
-      <div className="mb-6 flex items-center justify-end">
-        <Link
-          href="/dashboard/berita/add"
-          className="flex items-center gap-2 rounded-xl bg-gray-900 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition-all hover:bg-opacity-90 dark:bg-primary"
-        >
-          <Plus className="h-4 w-4" />
-          Tambah Berita
+      {/* Button Tambah Berita disamakan stylenya dengan Galeri */}
+      <div className="mb-6 flex justify-end">
+        <Link href="/dashboard/berita/add">
+          <Button
+            size="small"
+            variant="primary"
+            shape="rounded"
+            label="+ Tambah Berita"
+          />
         </Link>
       </div>
 
       <FilterBerita />
 
       <ShowcaseSection title="Data Berita" className="space-y-4">
-        <div className="dark:border-strokedark dark:bg-boxdark overflow-x-auto rounded-xl border border-stroke bg-white">
-          <table className="w-full table-auto text-left">
-            <thead>
-              <tr className="dark:bg-meta-4 bg-gray-2">
-                <th className="px-6 py-4 font-semibold text-gray-900 dark:text-white">
+        <div className="overflow-x-auto">
+          {/* Table wrapper disamakan: border-gray-300 dan rounded-lg */}
+          <table className="w-full table-auto overflow-hidden rounded-lg border border-gray-300 text-left">
+            {/* Thead disamakan: bg-gray-100 */}
+            <thead className="bg-gray-100">
+              <tr>
+                <th className="p-3 font-semibold text-gray-900">
                   Judul Berita
                 </th>
-
-                <th className="px-6 py-4 font-semibold text-gray-900 dark:text-white">
-                  Kategori
-                </th>
-
-                <th className="px-6 py-4 text-center font-semibold text-gray-900 dark:text-white">
+                <th className="p-3 font-semibold text-gray-900">Kategori</th>
+                <th className="p-3 text-center font-semibold text-gray-900">
                   Status
                 </th>
-
-                <th className="px-6 py-4 text-center font-semibold text-gray-900 dark:text-white">
+                <th className="p-3 text-center font-semibold text-gray-900">
                   Aksi
                 </th>
               </tr>
@@ -80,28 +80,27 @@ export default async function BeritaPage({
               {hasil.data.map((item: BeritaItem) => (
                 <tr
                   key={item.id}
-                  className="dark:border-strokedark dark:hover:bg-meta-4/10 border-b border-stroke transition-colors hover:bg-gray-50"
+                  className="border-t transition-colors hover:bg-gray-50"
                 >
-                  <td className="px-6 py-5">
+                  <td className="p-3">
                     <p
-                      className="max-w-[250px] truncate font-medium text-gray-900 dark:text-white"
+                      className="max-w-[250px] truncate font-medium text-gray-900"
                       title={item.judul}
                     >
                       {item.judul}
                     </p>
-
                     <p className="mt-1 text-xs text-gray-500">
                       {new Date(item.createdAt).toLocaleDateString("id-ID")}
                     </p>
                   </td>
 
-                  <td className="px-6 py-5">
-                    <span className="dark:bg-meta-4 rounded-md bg-gray-100 px-2 py-1 text-xs text-gray-600 dark:text-gray-300">
+                  <td className="p-3">
+                    <span className="rounded-md border border-gray-200 bg-gray-100 px-2 py-1 text-xs text-gray-600">
                       {item.kategori?.nama || "Umum"}
                     </span>
                   </td>
 
-                  <td className="px-6 py-5 text-center">
+                  <td className="p-3 text-center">
                     <span
                       className={`inline-flex rounded-full px-3 py-1 text-xs font-bold ${
                         item.published
@@ -113,7 +112,7 @@ export default async function BeritaPage({
                     </span>
                   </td>
 
-                  <td className="px-6 py-5 text-center">
+                  <td className="p-3">
                     <div className="flex items-center justify-center gap-3">
                       <Link
                         href={`/dashboard/berita/edit/${item.id}`}
@@ -135,7 +134,7 @@ export default async function BeritaPage({
 
               {hasil.data.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="py-12 text-center text-gray-500">
+                  <td colSpan={4} className="py-12 text-center text-gray-500">
                     Tidak ada berita yang ditemukan.
                   </td>
                 </tr>
@@ -144,11 +143,13 @@ export default async function BeritaPage({
           </table>
         </div>
 
-        <Pagination
-          currentPage={hasil.current_page}
-          lastPage={hasil.last_page}
-          path="/dashboard/berita"
-        />
+        {hasil.data.length > 0 && (
+          <Pagination
+            currentPage={hasil.current_page}
+            lastPage={hasil.last_page}
+            path="/dashboard/berita"
+          />
+        )}
       </ShowcaseSection>
     </>
   );

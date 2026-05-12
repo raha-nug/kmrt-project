@@ -1,18 +1,19 @@
-// src/app/dashboard/kategori/FormTambahKategori.tsx
 "use client";
 
 import { useState } from "react";
 import { createKategori } from "./actions";
 import Swal from "sweetalert2";
-import { Plus } from "lucide-react";
+import { Plus, Loader2 } from "lucide-react";
 
 export default function FormTambahKategori() {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [nama, setNama] = useState("");
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setIsSubmitting(true);
+    if (!nama.trim()) return;
 
+    setIsSubmitting(true);
     const formData = new FormData(e.currentTarget);
     const res = await createKategori(formData);
 
@@ -20,12 +21,9 @@ export default function FormTambahKategori() {
       Swal.fire({
         icon: "success",
         title: "Berhasil",
-        text: res.message,
-        toast: true,
-        position: "top-end",
-        showConfirmButton: false,
-        timer: 2000,
+        text: "Kategori baru telah ditambahkan.",
       });
+      setNama("");
       (e.target as HTMLFormElement).reset();
     } else {
       Swal.fire({ icon: "error", title: "Gagal", text: res.message });
@@ -35,40 +33,48 @@ export default function FormTambahKategori() {
   };
 
   return (
-    <div className="dark:border-strokedark dark:bg-boxdark rounded-xl border border-gray-200 bg-white shadow-sm">
-      <div className="dark:border-strokedark border-b border-gray-100 px-6 py-4">
-        <h3 className="font-semibold text-gray-900 dark:text-white">
-          Tambah Kategori Baru
+    <div className="dark:border-strokedark dark:bg-boxdark rounded-xl border border-gray-200 bg-white shadow-sm md:col-span-2">
+      {/* Header menggunakan border-b tipis khas list kategori */}
+      <div className="dark:border-strokedark border-b border-stroke px-6.5 py-4">
+        <h3 className="font-medium text-black dark:text-white">
+          Tambah Kategori
         </h3>
       </div>
-      <form onSubmit={handleSubmit} className="space-y-4 p-6">
-        <div>
-          <label className="mb-2 block text-sm font-medium text-black dark:text-white">
+
+      <form onSubmit={handleSubmit} className="p-6.5">
+        <div className="mb-4.5">
+          <label className="mb-2.5 block text-sm font-medium text-black dark:text-white">
             Nama Kategori
           </label>
           <input
             type="text"
             name="nama"
+            value={nama}
+            onChange={(e) => setNama(e.target.value)}
             required
-            placeholder="Contoh: Investigasi"
-            className="dark:border-strokedark dark:bg-meta-4 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-3 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary dark:text-white dark:focus:border-primary"
+            placeholder="Masukkan nama kategori"
+            className="disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default dark:text-white dark:focus:border-primary"
           />
-          <p className="mt-1 text-xs text-gray-500">
-            Slug URL akan dibuat secara otomatis.
-          </p>
+          <span className="mt-2 block text-xs text-slate-400">
+            Slug akan dibuat secara otomatis oleh sistem.
+          </span>
         </div>
 
         <button
           type="submit"
-          disabled={isSubmitting}
-          className="flex w-full justify-center gap-2 rounded-lg bg-gray-900 p-3 font-medium text-white transition-colors hover:bg-gray-800 disabled:opacity-50 dark:bg-primary dark:hover:bg-opacity-90"
+          disabled={isSubmitting || !nama.trim()}
+          className="flex w-full justify-center rounded bg-primary p-3 font-medium text-gray hover:bg-opacity-90 disabled:cursor-not-allowed disabled:bg-opacity-50"
         >
           {isSubmitting ? (
-            "Menyimpan..."
+            <div className="flex items-center gap-2">
+              <Loader2 className="animate-spin" size={18} />
+              <span>Memproses...</span>
+            </div>
           ) : (
-            <>
-              <Plus className="h-5 w-5" /> Simpan Kategori
-            </>
+            <div className="flex items-center gap-2">
+              <Plus size={18} />
+              <span>Simpan Kategori</span>
+            </div>
           )}
         </button>
       </form>
