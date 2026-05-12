@@ -6,8 +6,14 @@ export const ourFileRouter = {
   // Endpoint untuk Berita dan Galeri
   imageUploader: f({ image: { maxFileSize: "4MB" } }).onUploadComplete(
     async ({ metadata, file }) => {
-      console.log("Upload complete for userId:", metadata);
-      return { url: file.url };
+      console.log("Upload complete:", file.url);
+
+      // PENTING: Kembalikan 'key' agar bisa ditangkap oleh onClientUploadComplete
+      // dan digunakan untuk fungsi hapus jika user batal.
+      return {
+        url: file.url,
+        key: file.key,
+      };
     },
   ),
 
@@ -16,7 +22,10 @@ export const ourFileRouter = {
     image: { maxFileSize: "4MB" },
     pdf: { maxFileSize: "4MB" },
   }).onUploadComplete(async ({ file }) => {
-    return { url: file.url };
+    return {
+      url: file.url,
+      key: file.key,
+    };
   }),
 } satisfies FileRouter;
 

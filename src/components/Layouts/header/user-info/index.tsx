@@ -10,67 +10,75 @@ import { cn } from "@/lib/utils";
 import Image from "next/image";
 import { useState } from "react";
 import { LogOutIcon } from "./icons";
-import { useRouter } from "next/navigation";
 import Swal from "sweetalert2";
+import { useSession, signOut } from "next-auth/react";
 
 export function UserInfo() {
   const [isOpen, setIsOpen] = useState(false);
 
-  const router = useRouter();
-  const handleLogout = async () => {
-    try {
-      const res = await fetch(`/api/auth/logout`, {
-        headers: {
-          "Content-Type": "application/json",
-        },
-        method: "POST",
-      });
-      const auth = await res.json();
-      if (!auth?.success) throw new Error(auth.message || "Gagal logout");
+  const { data: session } = useSession();
 
-      if (auth?.success) {
-        await Swal.fire({
-          icon: "success",
-          title: auth?.message,
-          text: "Anda akan diarahkan ke login page.",
-          timer: 2000, // auto close setelah 2 detik
-          showConfirmButton: false,
-          didOpen: () => {
-            Swal.showLoading();
-          },
-        });
-        router.push("/auth/sign-in");
-      }
-    } catch (error: any) {
-      await Swal.fire({
-        icon: "error",
-        title: "Error",
-        text: error.message || "Terjadi kesalahan saat logout.",
-      });
-    }
+  const userName = session?.user?.name || "Administrator";
+  const userEmail = session?.user?.email || "admin@kmrt.id";
+  const userRole = session?.user?.role || "ADMIN";
+
+  const handleLogout = async () => {
+    // tutup dropdown dulu
+    setIsOpen(false);
+
+    const result = await Swal.fire({
+      title: "Logout?",
+      text: "Anda akan keluar dari dashboard",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Ya, Logout",
+      cancelButtonText: "Batal",
+      confirmButtonColor: "#2563eb",
+      cancelButtonColor: "#9ca3af",
+      background: "#ffffff",
+      color: "#111827",
+
+      customClass: {
+        popup: "rounded-2xl",
+      },
+    });
+
+    if (!result.isConfirmed) return;
+
+    await signOut({
+      callbackUrl: "/auth/sign-in",
+    });
   };
 
   return (
     <Dropdown isOpen={isOpen} setIsOpen={setIsOpen}>
-      <DropdownTrigger className="rounded align-middle outline-none ring-primary ring-offset-2 focus-visible:ring-1 dark:ring-offset-gray-dark">
-        <span className="sr-only">My Account</span>
+      <DropdownTrigger className="rounded-xl outline-none">
+        <span className="sr-only">User Menu</span>
 
-        <figure className="flex items-center gap-3">
+        <figure className="flex items-center gap-3 rounded-2xl border border-gray-200 bg-white px-3 py-2 shadow-sm">
           <Image
-            src={"/images/user.png"}
-            className="size-12"
-            alt={`Avatar of ${"Admin"}`}
-            role="presentation"
+            src="/images/user.png"
+            className="h-12 w-12 rounded-full border border-gray-200 object-cover"
+            alt="User Avatar"
             width={200}
             height={200}
           />
-          <figcaption className="flex items-center gap-1 font-medium text-dark dark:text-dark-6 max-[1024px]:sr-only">
-            <span>{"Admin"}</span>
+
+          <figcaption className="flex items-center gap-2 max-[1024px]:sr-only">
+            <div className="flex flex-col items-start text-left">
+              <span className="text-sm font-semibold text-gray-900">
+                {userName}
+              </span>
+
+              <span className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                {userRole}
+              </span>
+            </div>
 
             <ChevronUpIcon
               aria-hidden
               className={cn(
-                "rotate-180 transition-transform",
+                "rotate-180 text-gray-500 transition-transform duration-200",
                 isOpen && "rotate-0",
               )}
               strokeWidth={1.5}
@@ -80,40 +88,44 @@ export function UserInfo() {
       </DropdownTrigger>
 
       <DropdownContent
-        className="border border-stroke bg-white shadow-md dark:border-dark-3 dark:bg-gray-dark min-[230px]:min-w-[17.5rem]"
+        className="min-w-[290px] overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-lg"
         align="end"
       >
-        <h2 className="sr-only">User information</h2>
+        <div className="border-b border-gray-100 bg-gray-50 px-5 py-4">
+          <div className="flex items-center gap-3">
+            <Image
+              src="/images/user.png"
+              className="h-14 w-14 rounded-full border border-gray-200 object-cover"
+              alt="User Avatar"
+              width={200}
+              height={200}
+            />
 
-        <figure className="flex items-center gap-2.5 px-5 py-3.5">
-          <Image
-            src={"/images/user.png"}
-            className="size-12"
-            alt={`Avatar for ${"Admin"}`}
-            role="presentation"
-            width={200}
-            height={200}
-          />
+            <div className="flex-1">
+              <h3 className="text-base font-bold text-gray-900">{userName}</h3>
 
-          <figcaption className="space-y-1 text-base font-medium">
-            <div className="mb-2 leading-none text-dark dark:text-white">
-              {"Admin"}
+              <p className="mt-0.5 text-sm text-gray-500">{userEmail}</p>
+
+              <div className="mt-2 inline-flex rounded-full bg-blue-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-blue-700">
+                {userRole}
+              </div>
             </div>
+          </div>
+        </div>
 
-            <div className="leading-none text-gray-6">{}</div>
-          </figcaption>
-        </figure>
-
-        <hr className="border-[#E8E8E8] dark:border-dark-3" />
-
-        <div className="p-2 text-base text-[#4B5563] dark:text-dark-6">
+        <div className="p-2">
           <button
-            className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-[9px] hover:bg-gray-2 hover:text-dark dark:hover:bg-dark-3 dark:hover:text-white"
-            onClick={() => handleLogout()}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+
+              handleLogout();
+            }}
+            className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-gray-700 transition-colors hover:bg-red-50 hover:text-red-600"
           >
             <LogOutIcon />
 
-            <span className="text-base font-medium">Log out</span>
+            <span>Logout</span>
           </button>
         </div>
       </DropdownContent>

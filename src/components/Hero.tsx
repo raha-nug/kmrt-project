@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 
 export default function Hero() {
@@ -5,20 +6,12 @@ export default function Hero() {
     <section className="relative w-full overflow-hidden border-b border-gray-800 bg-[#0a0a0a] py-24 text-white md:py-32">
       {/* Ilustrasi Latar Belakang Halus (Simbol Timbangan Keadilan Abstrak) */}
       <div className="absolute inset-0 z-0 opacity-[0.03]">
-        <svg
-          width="100%"
-          height="100%"
-          viewBox="0 0 100 100"
-          preserveAspectRatio="none"
-        >
-          <path
-            d="M50 10 L90 90 L10 90 Z"
-            fill="none"
-            stroke="white"
-            strokeWidth="0.5"
-          />
-          <circle cx="50" cy="40" r="3" fill="white" />
-        </svg>
+        <Image
+          src="/images/logo/logo-kmrt.png"
+          alt="Background Illustration"
+          fill
+          className="object-cover"
+        />
       </div>
 
       <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -37,18 +30,18 @@ export default function Hero() {
               Lawan Korupsi.
             </h1>
 
-            <p className="mb-12 max-w-xl text-xl font-light leading-relaxed text-gray-300 opacity-90">
+            {/* <p className="mb-12 max-w-xl text-xl font-light leading-relaxed text-gray-300 opacity-90">
               KMRT berdiri sebagai benteng independen melawan praktik korupsi di
               Tasikmalaya. Kami bergerak dengan integritas untuk mewujudkan tata
               kelola pemerintahan yang bersih dan transparans.
-            </p>
+            </p> */}
 
             <div className="flex w-full flex-col gap-5 sm:w-auto sm:flex-row">
               <Link
                 href="/pengaduan"
                 className="rounded-sm bg-[#b91c1c] px-8 py-4 text-center text-sm font-bold uppercase tracking-widest text-white shadow-2xl transition-colors hover:bg-[#991b1b]"
               >
-                Laporkan Kejahatan
+                Laporkan Ketidakadilan
               </Link>
               <Link
                 href="/tentang"
@@ -61,7 +54,7 @@ export default function Hero() {
 
           {/* Kanan: Ilustrasi Mewah (Contoh Placeholder untuk Ilustrasi Vektor Elegan) */}
           <div className="w-full md:w-2/5">
-            <div className="group relative flex aspect-[3/4] w-full items-center justify-center overflow-hidden rounded-sm border border-gray-800 bg-[#111] p-8 shadow-2xl">
+            <div className="group relative flex aspect-[3/4] w-full items-center justify-center overflow-hidden rounded-sm border border-gray-800 bg-[#111] p-4 shadow-2xl">
               {/* Efek Cahaya Halus */}
               <div className="absolute -inset-1 bg-gradient-to-r from-[#b91c1c]/20 to-transparent opacity-30 blur-2xl transition-opacity group-hover:opacity-50"></div>
 
@@ -81,11 +74,8 @@ export default function Hero() {
                   />
                 </svg>
                 <h3 className="mb-4 font-serif text-3xl font-bold italic text-white">
-                  Lihat, Dengar, Rasakan, dan Lakukan!
+                  {'"Lihat, Dengar, Rasakan, dan Lakukan!"'}
                 </h3>
-                <p className="text-sm font-light leading-relaxed text-gray-400">
-                  Motto perjuangan KMRT untuk transparansi dan keadilan.
-                </p>
               </div>
 
               {/* Garis Aksen Halus */}

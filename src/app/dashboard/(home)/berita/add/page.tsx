@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Swal from "sweetalert2";
@@ -10,22 +10,52 @@ import { ShowcaseSection } from "@/components/Layouts/showcase-section";
 import { SubmitButton } from "@/components/FormElements/SubmitButton";
 import RichTextEditor from "@/components/FormElements/Editor";
 import { useUploadThing } from "@/utils/uploadthing";
-import { addNews, getAllKategoriForForm } from "../actions";
+import { addNews, getAllKategoriForForm, deleteImageFromUT } from "../actions";
 
 export default function AddNewsPage() {
   const router = useRouter();
 
-  // State Upload Gambar
+  // --- STATE UPLOAD GAMBAR ---
   const [imageUrl, setImageUrl] = useState<string>("");
+  const [imageKey, setImageKey] = useState<string>("");
   const [isUploading, setIsUploading] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  const imageKeyRef = useRef("");
 
-  // State Kategori
+  // --- STATE FORM DATA (Untuk Validasi Tombol) ---
+  const [title, setTitle] = useState("");
+  const [kategoriId, setKategoriId] = useState("");
   const [categories, setCategories] = useState<{ id: string; nama: string }[]>(
     [],
   );
   const [isLoadingCategories, setIsLoadingCategories] = useState(true);
 
-  // Mengambil data kategori saat halaman pertama dimuat
+  // Sync Ref dengan Key terbaru
+  useEffect(() => {
+    imageKeyRef.current = imageKey;
+  }, [imageKey]);
+
+  // --- LOGIKA CLEANUP (Hapus Gambar jika Batal) ---
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (imageKeyRef.current && !isSubmitted) {
+        e.preventDefault();
+        e.returnValue = "Gambar yang sudah diunggah akan terhapus. Lanjutkan?";
+      }
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+      // Jika pindah halaman internal dan belum submit, hapus file
+      if (imageKeyRef.current && !isSubmitted) {
+        deleteImageFromUT(imageKeyRef.current);
+      }
+    };
+  }, [isSubmitted]);
+
+  // Ambil data kategori
   useEffect(() => {
     async function fetchCategories() {
       try {
@@ -45,6 +75,7 @@ export default function AddNewsPage() {
     onClientUploadComplete: (res) => {
       setIsUploading(false);
       setImageUrl(res[0].url);
+      setImageKey(res[0].key);
       Swal.fire({
         icon: "success",
         title: "Gambar terupload!",
@@ -64,13 +95,27 @@ export default function AddNewsPage() {
     if (file) await startUpload([file]);
   };
 
+  const handleRemoveImage = async () => {
+    if (imageKey) {
+      await deleteImageFromUT(imageKey);
+      setImageUrl("");
+      setImageKey("");
+    }
+  };
+
+  // Validasi: Judul, Kategori, dan Gambar harus ada
+  const isFormValid =
+    title.trim() !== "" && kategoriId !== "" && imageUrl !== "" && !isUploading;
+
   async function handleSubmit(formData: FormData) {
-    // Tambahkan URL gambar ke dalam form data
+    if (!isFormValid) return;
+
     if (imageUrl) formData.append("image", imageUrl);
 
     const result = await addNews(formData);
 
     if (result?.success) {
+      setIsSubmitted(true); // Flag agar cleanup tidak menghapus gambar
       Swal.fire({
         icon: "success",
         title: "Berhasil!",
@@ -96,7 +141,6 @@ export default function AddNewsPage() {
 
       <ShowcaseSection title="Form Publikasi Berita Baru">
         <form action={handleSubmit} className="space-y-6">
-          {/* Baris 1: Judul & Kategori */}
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             <div className="space-y-2">
               <label className="block text-sm font-medium text-gray-900 dark:text-white">
@@ -105,6 +149,8 @@ export default function AddNewsPage() {
               <input
                 type="text"
                 name="title"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
                 required
                 placeholder="Masukkan judul..."
                 className="dark:border-strokedark dark:bg-meta-4 w-full rounded-xl border border-gray-300 bg-transparent px-4 py-3 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
@@ -117,6 +163,8 @@ export default function AddNewsPage() {
               </label>
               <select
                 name="kategoriId"
+                value={kategoriId}
+                onChange={(e) => setKategoriId(e.target.value)}
                 required
                 disabled={isLoadingCategories}
                 className="dark:border-strokedark dark:bg-meta-4 w-full appearance-none rounded-xl border border-gray-300 bg-transparent px-4 py-3 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary disabled:opacity-50"
@@ -135,7 +183,7 @@ export default function AddNewsPage() {
             </div>
           </div>
 
-          {/* Baris 2: Ringkasan & Status */}
+          {/* Ringkasan & Status */}
           <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
             <div className="space-y-2 md:col-span-2">
               <label className="block text-sm font-medium text-gray-900 dark:text-white">
@@ -163,7 +211,7 @@ export default function AddNewsPage() {
             </div>
           </div>
 
-          {/* Upload Gambar */}
+          {/* Upload Gambar Utama */}
           <div className="space-y-3">
             <label className="block text-sm font-medium text-gray-900 dark:text-white">
               Gambar Utama{" "}
@@ -191,7 +239,7 @@ export default function AddNewsPage() {
                 />
                 <button
                   type="button"
-                  onClick={() => setImageUrl("")}
+                  onClick={handleRemoveImage}
                   className="absolute right-2 top-2 rounded-full bg-red-500 p-2 text-white shadow-md transition-colors hover:bg-red-600"
                 >
                   <svg
@@ -215,9 +263,8 @@ export default function AddNewsPage() {
             placeholder="Tulis detail berita secara lengkap di sini..."
           />
 
-          {/* Tombol Submit */}
           <div className="dark:border-strokedark flex justify-end border-t border-gray-100 pt-4">
-            <SubmitButton disabled={isUploading || isLoadingCategories} />
+            <SubmitButton disabled={!isFormValid || isLoadingCategories} />
           </div>
         </form>
       </ShowcaseSection>

@@ -1,7 +1,12 @@
 "use server";
+
 import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { UTApi } from "uploadthing/server";
 
+const utapi = new UTApi();
+
+// Mengambil semua berita dengan paginasi
 export async function getBerita(
   page: number = 1,
   query: string = "",
@@ -12,15 +17,13 @@ export async function getBerita(
 
   const where: any = {};
 
-  // Filter berdasarkan status (Published / Draft)
   if (statusFilter === "PUBLISHED") where.published = true;
   if (statusFilter === "DRAFT") where.published = false;
 
-  // Search berdasarkan judul atau ringkasan
   if (query) {
     where.OR = [
-      { judul: { contains: query } },
-      { ringkasan: { contains: query } },
+      { judul: { contains: query, mode: "insensitive" } },
+      { ringkasan: { contains: query, mode: "insensitive" } },
     ];
   }
 
@@ -48,6 +51,18 @@ export async function getBerita(
   }
 }
 
+// Menghapus file dari UploadThing storage
+export async function deleteImageFromUT(fileKey: string) {
+  if (!fileKey) return { success: false, message: "File Key diperlukan." };
+  try {
+    const response = await utapi.deleteFiles(fileKey);
+    return { success: response.success };
+  } catch (error) {
+    console.error("UploadThing Delete Error:", error);
+    return { success: false, message: "Gagal menghapus file di storage." };
+  }
+}
+
 // Mengambil satu berita berdasarkan ID
 export async function getNewsById(id: string) {
   return await prisma.berita.findUnique({
@@ -55,18 +70,18 @@ export async function getNewsById(id: string) {
   });
 }
 
-// Fungsi BARU untuk mengambil detail berita berdasarkan slug
+// Mengambil detail berita berdasarkan slug
 export async function getNewsBySlug(slug: string) {
   try {
-    const news = await prisma.berita.findUnique({
+    return await prisma.berita.findUnique({
       where: { slug: slug },
     });
-    return news;
   } catch (error) {
     console.error("Error fetching news detail:", error);
     return null;
   }
 }
+
 export async function getAllKategoriForForm() {
   return await prisma.kategori.findMany({
     select: { id: true, nama: true },
@@ -74,6 +89,7 @@ export async function getAllKategoriForForm() {
   });
 }
 
+// Menambah berita
 export async function addNews(formData: FormData) {
   try {
     const title = formData.get("title") as string;
@@ -83,10 +99,10 @@ export async function addNews(formData: FormData) {
     const ringkasan = formData.get("ringkasan") as string;
     const published = formData.get("published") === "true";
 
-    if (!title || !content || !kategoriId) {
+    if (!title || !content || !kategoriId || !image) {
       return {
         success: false,
-        message: "Judul, Kategori, dan Konten wajib diisi!",
+        message: "Judul, Kategori, Konten, dan Gambar Utama wajib diisi!",
       };
     }
 
@@ -104,7 +120,7 @@ export async function addNews(formData: FormData) {
         slug,
         ringkasan,
         konten: content,
-        gambar: image || null,
+        gambar: image,
         kategoriId,
         published,
       },
@@ -118,6 +134,7 @@ export async function addNews(formData: FormData) {
   }
 }
 
+// Update berita
 export async function updateNews(formData: FormData) {
   try {
     const id = formData.get("id") as string;
