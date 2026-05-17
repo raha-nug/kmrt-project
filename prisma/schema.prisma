@@ -8,7 +8,7 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -65,7 +65,7 @@ model Berita {
   judul       String
   slug        String   @unique
   ringkasan   String?  @db.Text // Teks pendek untuk preview di halaman depan
-  konten      String   @db.LongText // Untuk menampung teks HTML berukuran besar
+  konten      String   @db.Text // Untuk menampung teks HTML berukuran besar
   gambar      String?
   published   Boolean  @default(false)
   views       Int      @default(0) // Untuk fitur "Berita Populer" nanti
