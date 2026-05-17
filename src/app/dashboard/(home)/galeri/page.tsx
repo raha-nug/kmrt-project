@@ -12,6 +12,7 @@ interface GaleriItem {
   id: string;
   judul: string;
   gambar: string;
+  tanggal: Date | string;
   createdAt: Date | string;
 }
 
@@ -70,7 +71,7 @@ export default async function GaleriPage({
                   <td className="p-3 font-medium">{item.judul}</td>
 
                   <td className="p-3">
-                    {new Date(item.createdAt).toLocaleDateString("id-ID")}
+                    {new Date(item.tanggal).toLocaleDateString("id-ID")}
                   </td>
 
                   <td className="flex justify-center gap-2 p-3">

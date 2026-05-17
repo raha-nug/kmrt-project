@@ -6,6 +6,7 @@ interface FotoGaleri {
   id: string;
   judul: string;
   gambar: string;
+  tanggal: Date | string;
   createdAt: Date | string;
 }
 
@@ -80,7 +81,7 @@ export default async function GaleriPage({
                     <div className="flex items-center text-xs font-semibold uppercase tracking-widest text-gray-500">
                       <Calendar className="mr-2 h-4 w-4 text-[#b91c1c]" />
 
-                      {new Date(foto.createdAt).toLocaleDateString("id-ID", {
+                      {new Date(foto.tanggal).toLocaleDateString("id-ID", {
                         day: "numeric",
                         month: "long",
                         year: "numeric",

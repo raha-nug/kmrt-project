@@ -28,9 +28,10 @@ export default function Footer() {
               Sekretariat
             </h4>
             <p className="text-sm font-light leading-relaxed text-gray-400">
-              Jl. Pergerakan No. 12, Cipakat,
-              <br /> Kec. Singaparna, Tasikmalaya,
-              <br /> Jawa Barat, 46417
+              Komplek Perumahan Rancabungur Blok.E No.2 RT.003 RW.003 Desa
+              Cilampunghilir <br />
+              Kec.Padakembang Kab.Tasikmalaya 46466
+              <br /> Jawa Barat, 46466
             </p>
           </div>
 
