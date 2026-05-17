@@ -5,18 +5,17 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Swal from "sweetalert2";
 
-import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
-import { ShowcaseSection } from "@/components/Layouts/showcase-section";
-import { SubmitButton } from "@/components/FormElements/SubmitButton";
 import InputGroup from "@/components/FormElements/InputGroup";
+import { SubmitButton } from "@/components/FormElements/SubmitButton";
 import RichTextEditor from "@/components/FormElements/Editor";
 import SwitcherOne from "@/components/FormElements/Switchers/SwitcherOne";
-import { useUploadThing } from "@/utils/uploadthing";
+
 import {
   updateNews,
   deleteImageFromUT,
   getAllKategoriForForm,
 } from "../../actions";
+import { useUploadThing } from "@/utils/uploadthing";
 
 export default function NewsEditForm({ news }: { news: any }) {
   const router = useRouter();
@@ -25,7 +24,9 @@ export default function NewsEditForm({ news }: { news: any }) {
   const [imageUrl, setImageUrl] = useState<string>(news.gambar || "");
   const [imageKey, setImageKey] = useState<string>(""); // Key untuk gambar BARU
   const [isUploading, setIsUploading] = useState(false);
-  const [isSubmitted, setIsSubmitted] = useState(false);
+
+  // PERBAIKAN: Gunakan Ref untuk mengunci status submit secara sinkron
+  const isSubmittedRef = useRef(false);
   const newImageKeyRef = useRef("");
 
   // --- STATE FORM DATA ---
@@ -44,7 +45,7 @@ export default function NewsEditForm({ news }: { news: any }) {
   // Logic Cleanup: Hanya menghapus gambar BARU jika user batal edit
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      if (newImageKeyRef.current && !isSubmitted) {
+      if (newImageKeyRef.current && !isSubmittedRef.current) {
         e.preventDefault();
         e.returnValue =
           "Perubahan belum disimpan, gambar baru akan terhapus. Keluar?";
@@ -55,11 +56,12 @@ export default function NewsEditForm({ news }: { news: any }) {
 
     return () => {
       window.removeEventListener("beforeunload", handleBeforeUnload);
-      if (newImageKeyRef.current && !isSubmitted) {
+      // Hanya hapus gambar baru jika proses submit belum berhasil/terkunci
+      if (newImageKeyRef.current && !isSubmittedRef.current) {
         deleteImageFromUT(newImageKeyRef.current);
       }
     };
-  }, [isSubmitted]);
+  }, []);
 
   // Ambil data kategori
   useEffect(() => {
@@ -101,12 +103,11 @@ export default function NewsEditForm({ news }: { news: any }) {
 
   const handleRemoveImage = async () => {
     if (imageKey) {
-      // Hapus file baru dari storage
       await deleteImageFromUT(imageKey);
       setImageKey("");
       setImageUrl("");
     } else {
-      // Cukup kosongkan preview untuk gambar lama
+      // Jika gambar lama, cukup hilangkan preview di UI
       setImageUrl("");
     }
   };
@@ -117,32 +118,40 @@ export default function NewsEditForm({ news }: { news: any }) {
   async function handleClientAction(formData: FormData) {
     if (!isFormValid) return;
 
+    // KUNCI: Set ref menjadi true seketika agar cleanup tidak dipicu
+    isSubmittedRef.current = true;
+
     formData.append("image", imageUrl);
 
-    const result = await updateNews(formData);
+    try {
+      const result = await updateNews(formData);
 
-    if (result.success) {
-      setIsSubmitted(true);
-      await Swal.fire({
-        icon: "success",
-        title: "Berhasil",
-        text: "Berita berhasil diperbarui.",
-        timer: 1500,
-        showConfirmButton: false,
-      });
-      router.push("/dashboard/berita");
-      router.refresh();
-    } else {
-      Swal.fire({ icon: "error", title: "Gagal", text: result.message });
+      if (result.success) {
+        await Swal.fire({
+          icon: "success",
+          title: "Berhasil",
+          text: "Berita berhasil diperbarui.",
+          timer: 1500,
+          showConfirmButton: false,
+        });
+        router.push("/dashboard/berita");
+        router.refresh();
+      } else {
+        // Buka kunci jika gagal simpan ke DB
+        isSubmittedRef.current = false;
+        Swal.fire({ icon: "error", title: "Gagal", text: result.message });
+      }
+    } catch (error) {
+      isSubmittedRef.current = false;
+      console.error(error);
+      Swal.fire("Error", "Terjadi kesalahan sistem", "error");
     }
   }
 
   return (
     <form action={handleClientAction} className="max-w-4xl space-y-6">
-      {/* Hidden ID */}
       <input type="hidden" name="id" defaultValue={news.id} />
 
-      {/* 1. Judul Berita */}
       <InputGroup
         label="Judul Berita"
         type="text"
@@ -152,7 +161,6 @@ export default function NewsEditForm({ news }: { news: any }) {
         required
       />
 
-      {/* 2. Kategori */}
       <div className="space-y-2">
         <label className="block text-sm font-medium text-black dark:text-white">
           Kategori Berita <span className="text-red-500">*</span>
@@ -173,7 +181,6 @@ export default function NewsEditForm({ news }: { news: any }) {
         </select>
       </div>
 
-      {/* 3. Ringkasan */}
       <div className="space-y-2">
         <label className="block text-sm font-medium text-black dark:text-white">
           Ringkasan Berita{" "}
@@ -190,7 +197,6 @@ export default function NewsEditForm({ news }: { news: any }) {
         ></textarea>
       </div>
 
-      {/* 4. Gambar Utama */}
       <div className="space-y-3">
         <label className="block text-sm font-medium text-black dark:text-white">
           Gambar Utama{" "}
@@ -237,7 +243,6 @@ export default function NewsEditForm({ news }: { news: any }) {
         )}
       </div>
 
-      {/* 5. Status Publikasi */}
       <div className="dark:border-strokedark flex items-center gap-6 border-y border-dashed border-stroke py-2">
         <label className="text-sm font-medium text-black dark:text-white">
           Status Publish
@@ -245,7 +250,6 @@ export default function NewsEditForm({ news }: { news: any }) {
         <SwitcherOne name="published" defaultValue={news.published} />
       </div>
 
-      {/* 6. Editor Isi Konten */}
       <RichTextEditor
         label="Isi Konten Berita"
         name="content"

@@ -1,29 +1,29 @@
 export default function FeatureListSection() {
+  // Merangkum 9 Prinsip KMRT menjadi 4 Pilar Utama untuk Halaman Beranda
   const prinsip = [
     {
-      title: "Tidak Berpihak",
-      desc: "Sikap tegas tanpa kompromi terhadap segala bentuk praktik korupsi, tanpa pandang bulu siapa pelakunya.",
+      title: "Integritas Tanpa Kompromi",
+      desc: "Menjunjung tinggi moralitas dan kejujuran, menolak segala bentuk suap, serta menjadi teladan murni dalam pemberantasan korupsi.",
     },
     {
-      title: "Independen & Mandiri",
-      desc: "Bergerak bebas dari intervensi politik praktis maupun tekanan dari pihak/golongan tertentu.",
+      title: "Independen & Objektif",
+      desc: "Berdiri tegak tanpa intervensi partai politik, bertindak adil tanpa diskriminasi, dan selalu mengambil keputusan murni demi kebenaran.",
     },
     {
       title: "Transparan & Akuntabel",
-      desc: "Menerapkan standar keterbukaan informasi publik dan pertanggungjawaban dalam setiap langkah organisasi.",
+      desc: "Menerapkan standar keterbukaan informasi yang tinggi. Setiap langkah dan keputusan kami selalu siap diuji dan dipertanggungjawabkan kepada publik.",
     },
     {
-      title: "Berpihak pada Rakyat",
-      desc: "Selalu meletakkan kepentingan, hak, dan keadilan bagi masyarakat sebagai prioritas paling tinggi.",
+      title: "Perlindungan & Kerahasiaan",
+      desc: "Menjamin keamanan secara mutlak. Kami berkomitmen penuh merahasiakan identitas setiap saksi dan pelapor yang berani bersuara.",
     },
   ];
 
   return (
     <section className="w-full border-t-4 border-[#b91c1c] bg-gray-950 py-16 text-white lg:py-32">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        {/* Gap diperkecil di mobile, normal di Desktop */}
         <div className="flex flex-col items-start gap-10 lg:flex-row lg:gap-24">
-          {/* Bagian Judul (Kiri) - Sticky hanya di Desktop (lg:sticky) */}
+          {/* Bagian Judul (Kiri) */}
           <div className="w-full lg:sticky lg:top-32 lg:w-1/3">
             <div className="mb-6 h-1 w-16 bg-[#b91c1c] lg:mb-8"></div>
             <h2 className="mb-4 font-serif text-3xl font-extrabold leading-tight tracking-tight text-white sm:mb-6 sm:text-4xl md:text-5xl">
@@ -31,8 +31,9 @@ export default function FeatureListSection() {
               <span className="text-[#b91c1c]">Integritas</span> Kami.
             </h2>
             <p className="text-base font-light leading-relaxed text-gray-400 sm:text-lg">
-              Empat pilar utama yang menjadi kompas mutlak pergerakan KMRT dalam
-              menuntut keadilan dan melawan tirani korupsi di Tasikmalaya.
+              Empat pilar utama yang merangkum landasan etika pergerakan KMRT
+              dalam menuntut keadilan dan mengawasi tata kelola pemerintahan di
+              Tasikmalaya.
             </p>
           </div>
 

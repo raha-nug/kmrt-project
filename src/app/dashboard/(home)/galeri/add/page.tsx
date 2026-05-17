@@ -1,5 +1,4 @@
 "use client";
-
 import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
 import InputGroup from "@/components/FormElements/InputGroup";
 import { ShowcaseSection } from "@/components/Layouts/showcase-section";
@@ -14,39 +13,28 @@ export default function AddGaleriPage() {
   const [imageUrl, setImageUrl] = useState<string>("");
   const [imageKey, setImageKey] = useState<string>("");
   const [isUploading, setIsUploading] = useState(false);
-  const [isSubmitted, setIsSubmitted] = useState(false);
 
   // State untuk form
   const [judul, setJudul] = useState("");
   const [tanggal, setTanggal] = useState("");
 
-  // Ref untuk menyimpan key terbaru agar bisa diakses di dalam cleanup useEffect
+  // ✅ Gunakan Ref agar sinkron seketika tanpa delay re-render
+  const isSubmittedRef = useRef(false);
   const imageKeyRef = useRef("");
 
+  // Sync imageKey ke ref setiap kali berubah
   useEffect(() => {
     imageKeyRef.current = imageKey;
   }, [imageKey]);
 
-  // Logic Cleanup: Hapus file jika user keluar halaman/tutup tab tanpa submit
+  // ✅ Cleanup: hanya hapus jika belum submit (pakai ref, bukan state)
   useEffect(() => {
-    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      if (imageKeyRef.current && !isSubmitted) {
-        e.preventDefault();
-        e.returnValue =
-          "Foto yang diupload akan terhapus jika Anda keluar. Lanjutkan?";
-      }
-    };
-
-    window.addEventListener("beforeunload", handleBeforeUnload);
-
     return () => {
-      window.removeEventListener("beforeunload", handleBeforeUnload);
-      // Jika komponen unmount (pindah page internal) dan belum submit, hapus file
-      if (imageKeyRef.current && !isSubmitted) {
+      if (imageKeyRef.current && !isSubmittedRef.current) {
         deleteImageFromUT(imageKeyRef.current);
       }
     };
-  }, [isSubmitted]);
+  }, []); // dependency kosong — hanya jalan saat unmount
 
   const { startUpload } = useUploadThing("imageUploader", {
     onClientUploadComplete: (res) => {
@@ -81,21 +69,30 @@ export default function AddGaleriPage() {
   async function handleSubmit(formData: FormData) {
     if (!isFormValid) return;
 
+    // ✅ Kunci sebelum request — ref langsung berubah tanpa tunggu re-render
+    isSubmittedRef.current = true;
+
     formData.append("image", imageUrl);
-    formData.append("tanggal", tanggal); // Pastikan tanggal ikut terkirim
+    formData.append("tanggal", tanggal);
 
-    const result = await addGaleri(formData);
-
-    if (result.success) {
-      setIsSubmitted(true); // Matikan proteksi cleanup
-      await Swal.fire({
-        icon: "success",
-        title: "Berhasil",
-        text: "Foto ditambahkan ke galeri.",
-      });
-      window.location.href = "/dashboard/galeri";
-    } else {
-      Swal.fire({ icon: "error", title: "Error", text: result.message });
+    try {
+      const result = await addGaleri(formData);
+      if (result.success) {
+        await Swal.fire({
+          icon: "success",
+          title: "Berhasil",
+          text: "Foto ditambahkan ke galeri.",
+        });
+        window.location.href = "/dashboard/galeri";
+      } else {
+        // ✅ Jika DB gagal, buka kembali kunci agar cleanup bisa jalan
+        isSubmittedRef.current = false;
+        Swal.fire({ icon: "error", title: "Error", text: result.message });
+      }
+    } catch (error) {
+      isSubmittedRef.current = false;
+      console.error(error);
+      Swal.fire("Error", "Terjadi kesalahan sistem", "error");
     }
   }
 
@@ -113,7 +110,6 @@ export default function AddGaleriPage() {
             placeholder="Misal: Kegiatan Rapat Desa"
             required
           />
-
           <InputGroup
             type="date"
             label="Tanggal Kegiatan"
@@ -122,7 +118,6 @@ export default function AddGaleriPage() {
             handleChange={(e) => setTanggal(e.target.value)}
             required
           />
-
           <div className="space-y-2">
             <label className="block text-sm font-medium text-black dark:text-white">
               File Gambar{" "}
@@ -132,20 +127,29 @@ export default function AddGaleriPage() {
                 </span>
               )}
             </label>
-
             {!imageUrl ? (
-              <input
-                type="file"
-                accept="image/*"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) startUpload([file]);
-                }}
-                disabled={isUploading}
-                className="w-full rounded-lg border-[1.5px] border-stroke bg-transparent font-medium outline-none transition file:mr-5 file:border-0 file:px-5 file:py-3 file:hover:bg-primary focus:border-primary disabled:bg-gray-2"
-              />
+              <div className="dark:border-strokedark dark:bg-meta-4 group relative flex h-32 w-full max-w-lg cursor-pointer items-center justify-center rounded-xl border-2 border-dashed border-stroke bg-gray-50 transition hover:border-primary">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) startUpload([file]);
+                  }}
+                  disabled={isUploading}
+                  className="absolute inset-0 z-10 h-full w-full cursor-pointer opacity-0"
+                />
+                <div className="flex flex-col items-center justify-center text-center">
+                  <span className="text-sm font-medium text-slate-500">
+                    Pilih Gambar
+                  </span>
+                  <span className="text-xs text-slate-400">
+                    Rasio 16:9 disarankan
+                  </span>
+                </div>
+              </div>
             ) : (
-              <div className="relative h-60 w-full overflow-hidden rounded-lg border md:w-1/2">
+              <div className="relative h-48 w-full max-w-sm overflow-hidden rounded-xl border border-stroke shadow-sm">
                 <Image
                   src={imageUrl}
                   alt="Preview"
@@ -155,7 +159,7 @@ export default function AddGaleriPage() {
                 <button
                   type="button"
                   onClick={handleRemoveImage}
-                  className="absolute right-2 top-2 rounded-full bg-red-500 p-1.5 text-white shadow-lg"
+                  className="absolute right-2 top-2 rounded-full bg-red-500 p-1.5 text-white shadow-lg transition-transform hover:scale-110"
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -170,7 +174,6 @@ export default function AddGaleriPage() {
               </div>
             )}
           </div>
-
           <div className="flex justify-end">
             <SubmitButton disabled={!isFormValid} />
           </div>

@@ -21,7 +21,9 @@ export default function AddNewsPage() {
   const [imageUrl, setImageUrl] = useState<string>("");
   const [imageKey, setImageKey] = useState<string>("");
   const [isUploading, setIsUploading] = useState(false);
-  const [isSubmitted, setIsSubmitted] = useState(false);
+
+  // Gunakan useRef untuk status submitted agar sinkron seketika tanpa nunggu re-render
+  const isSubmittedRef = useRef(false);
   const imageKeyRef = useRef("");
 
   // --- STATE FORM ---
@@ -32,18 +34,22 @@ export default function AddNewsPage() {
   );
   const [isLoadingCategories, setIsLoadingCategories] = useState(true);
 
+  // Update ref setiap kali imageKey berubah
   useEffect(() => {
     imageKeyRef.current = imageKey;
   }, [imageKey]);
 
+  // FUNGSI CLEANUP (Hanya menghapus jika user BENAR-BENAR membatalkan/keluar halaman)
   useEffect(() => {
     return () => {
-      if (imageKeyRef.current && !isSubmitted) {
+      // Jika ada gambar tapi isSubmittedRef masih false, hapus dari cloud
+      if (imageKeyRef.current && !isSubmittedRef.current) {
         deleteImageFromUT(imageKeyRef.current);
       }
     };
-  }, [isSubmitted]);
+  }, []);
 
+  // Fetch Kategori
   useEffect(() => {
     async function fetchCategories() {
       try {
@@ -62,7 +68,10 @@ export default function AddNewsPage() {
       setImageUrl(res[0].url);
       setImageKey(res[0].key);
     },
-    onUploadError: () => setIsUploading(false),
+    onUploadError: () => {
+      setIsUploading(false);
+      Swal.fire("Error", "Gagal upload gambar", "error");
+    },
     onUploadBegin: () => setIsUploading(true),
   });
 
@@ -79,19 +88,33 @@ export default function AddNewsPage() {
 
   async function handleSubmit(formData: FormData) {
     if (!isFormValid) return;
+
+    // Kunci status submitted menggunakan Ref (langsung berubah tanpa delay)
+    isSubmittedRef.current = true;
+
     formData.append("image", imageUrl);
 
-    const result = await addNews(formData);
-    if (result?.success) {
-      setIsSubmitted(true);
-      Swal.fire({
-        icon: "success",
-        title: "Berhasil Terbit",
-        timer: 1500,
-        showConfirmButton: false,
-      });
-      router.push("/dashboard/berita");
-      router.refresh();
+    try {
+      const result = await addNews(formData);
+
+      if (result?.success) {
+        await Swal.fire({
+          icon: "success",
+          title: "Berhasil Terbit",
+          timer: 1500,
+          showConfirmButton: false,
+        });
+        router.push("/dashboard/berita");
+        router.refresh();
+      } else {
+        // Jika gagal simpan ke DB, buka kembali kuncinya
+        isSubmittedRef.current = false;
+        Swal.fire("Gagal", result?.message || "Terjadi kesalahan", "error");
+      }
+    } catch (error) {
+      isSubmittedRef.current = false;
+      console.error(error);
+      Swal.fire("Error", "Terjadi kesalahan sistem", "error");
     }
   }
 
@@ -101,7 +124,6 @@ export default function AddNewsPage() {
 
       <ShowcaseSection title="Form Publikasi Berita">
         <form action={handleSubmit} className="max-w-4xl space-y-6">
-          {/* 1. Judul Berita */}
           <InputGroup
             type="text"
             label="Judul Berita"
@@ -112,7 +134,6 @@ export default function AddNewsPage() {
             required
           />
 
-          {/* 2. Kategori */}
           <div className="space-y-2">
             <label className="block text-sm font-medium text-black dark:text-white">
               Kategori Berita <span className="text-red-500">*</span>
@@ -133,7 +154,6 @@ export default function AddNewsPage() {
             </select>
           </div>
 
-          {/* 3. Ringkasan */}
           <div className="space-y-2">
             <label className="block text-sm font-medium text-black dark:text-white">
               Ringkasan Berita{" "}
@@ -149,12 +169,11 @@ export default function AddNewsPage() {
             ></textarea>
           </div>
 
-          {/* 4. Gambar Utama */}
           <div className="space-y-3">
             <label className="block text-sm font-medium text-black dark:text-white">
               Gambar Utama{" "}
               {isUploading && (
-                <span className="ml-2 animate-pulse text-xs font-normal text-primary">
+                <span className="ml-2 animate-pulse text-xs text-primary">
                   (Upload...)
                 </span>
               )}
@@ -171,7 +190,7 @@ export default function AddNewsPage() {
                   }}
                   className="absolute inset-0 z-10 h-full w-full cursor-pointer opacity-0"
                 />
-                <div className="flex flex-col items-center justify-center space-y-1 text-center">
+                <div className="flex flex-col items-center justify-center text-center">
                   <span className="text-sm font-medium text-slate-500">
                     Pilih Gambar
                   </span>
@@ -207,7 +226,6 @@ export default function AddNewsPage() {
             )}
           </div>
 
-          {/* 5. Status Publikasi */}
           <div className="dark:border-strokedark flex items-center gap-6 border-y border-dashed border-stroke py-2">
             <label className="text-sm font-medium text-black dark:text-white">
               Status Publish
@@ -215,10 +233,8 @@ export default function AddNewsPage() {
             <SwitcherOne name="published" defaultValue={true} />
           </div>
 
-          {/* 6. Editor Isi Konten */}
           <RichTextEditor label="Isi Konten Berita" name="content" />
 
-          {/* Tombol Aksi */}
           <div className="dark:border-strokedark flex items-center justify-end border-t border-stroke pt-6">
             <SubmitButton disabled={!isFormValid || isLoadingCategories} />
           </div>

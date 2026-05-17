@@ -1,14 +1,12 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image"; // 1. Import komponen Image dari Next.js
 import { useState } from "react";
-// 1. Import usePathname
 import { usePathname } from "next/navigation";
 
 export default function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-
-  // 2. Ambil path saat ini
   const pathname = usePathname();
 
   const menuItems = [
@@ -19,7 +17,6 @@ export default function Header() {
     { name: "Berita", href: "/berita" },
   ];
 
-  // 3. Fungsi pembantu untuk cek apakah link aktif
   const isActive = (href: string) => {
     if (href === "/" && pathname !== "/") return false;
     return pathname.startsWith(href);
@@ -30,19 +27,31 @@ export default function Header() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-20 items-center justify-between">
           {/* Logo & Brand Identity */}
-          <div className="flex items-center gap-4">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center bg-[#b91c1c] font-serif text-xl font-bold text-white shadow-md">
-              KM
+          {/* Seluruh area dijadikan Link agar gambar dan teks bisa diklik bersamaan */}
+          <Link href="/" className="group flex items-center gap-4">
+            {/* Area Gambar Logo */}
+            <div className="relative h-11 w-11 shrink-0 overflow-hidden">
+              {/* 2. Gunakan tag Image. Pastikan file logo Anda (misal: logo-kmrt.png) ada di dalam folder 'public' */}
+              <Image
+                src="/images/logo/logo-kmrt.png" // Ganti dengan nama file gambar Anda
+                alt="Logo KMRT"
+                fill
+                className="object-contain" // Gunakan 'object-contain' agar logo tidak terpotong, atau 'object-cover' jika ingin memenuhi kotak
+                sizes="44px"
+              />
+
+              {/* Jika Anda lebih suka tag img HTML biasa tanpa next/image, gunakan baris di bawah ini dan hapus tag <Image> di atas: */}
+              {/* <img src="/logo-kmrt.png" alt="Logo KMRT" className="h-full w-full object-contain" /> */}
             </div>
-            <Link href="/" className="group flex flex-col">
+
+            {/* Area Teks Logo */}
+            <div className="flex flex-col">
               <span className="font-serif text-xl font-extrabold leading-none tracking-tight text-gray-950 transition-colors group-hover:text-[#b91c1c] md:text-2xl">
                 KMRT
               </span>
-              <span className="mt-1 text-[9px] font-bold uppercase tracking-widest text-gray-500 md:text-[10px]">
-                Tasikmalaya
-              </span>
-            </Link>
-          </div>
+             
+            </div>
+          </Link>
 
           {/* Navigasi Utama (Desktop) */}
           <nav className="hidden items-center gap-8 md:flex">

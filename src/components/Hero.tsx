@@ -1,86 +1,103 @@
 import Image from "next/image";
 import Link from "next/link";
+import { getGaleri } from "@/app/dashboard/(home)/galeri/actions";
+import HeroSlideshow from "@/components/ui-elements/HeroSlideshow";
 
-export default function Hero() {
+export default async function Hero() {
+  const hasil = await getGaleri(1);
+  const fotoHero = hasil.data.slice(0, 3);
+
   return (
-    <section className="relative w-full overflow-hidden border-b border-gray-800 bg-[#0a0a0a] py-24 text-white md:py-32">
-      {/* Ilustrasi Latar Belakang Halus (Simbol Timbangan Keadilan Abstrak) */}
-      <div className="absolute inset-0 z-0 opacity-[0.03]">
-        <Image
-          src="/images/logo/logo-kmrt.png"
-          alt="Background Illustration"
-          fill
-          className="object-cover"
-        />
-      </div>
-
+    <section className="relative w-full overflow-hidden border-b border-gray-800 bg-[#0a0a0a] py-20 text-white md:py-28">
       <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col items-center gap-16 md:flex-row">
-          {/* Kiri: Teks Otoritatif */}
-          <div className="flex w-full flex-col items-start text-left md:w-3/5">
-            <div className="mb-8 inline-flex items-center gap-3 rounded-full border border-gray-800 bg-white/5 px-4 py-1.5">
-              <div className="h-2 w-2 animate-pulse rounded-full bg-[#b91c1c]"></div>
-              <span className="text-xs font-semibold uppercase tracking-widest text-gray-300">
+        <div className="flex flex-col items-stretch gap-10 md:flex-row md:gap-16">
+          {/* ── KIRI: Teks ── */}
+          <div className="flex w-full flex-col justify-center md:w-3/5">
+            {/* Badge */}
+            <div className="mb-8 inline-flex w-fit items-center gap-3 rounded-full border border-gray-800 bg-white/5 px-4 py-1.5">
+              <div className="h-2 w-2 animate-pulse rounded-full bg-[#b91c1c]" />
+              <span className="text-xs font-semibold uppercase tracking-widest text-gray-400">
                 Koalisi Mahasiswa & Rakyat Tasikmalaya · Est. 2004
               </span>
             </div>
 
-            <h1 className="mb-8 font-serif text-5xl font-extrabold leading-tight tracking-tighter text-white md:text-7xl">
+            {/* Aksen garis */}
+            <div className="mb-5 h-0.5 w-10 bg-[#b91c1c]" />
+
+            {/* Heading */}
+            <h1 className="mb-5 font-serif text-4xl font-extrabold leading-tight tracking-tight text-white md:text-6xl">
               Tegakkan <span className="text-[#b91c1c]">Keadilan</span>.<br />
               Lawan Korupsi.
             </h1>
 
-            {/* <p className="mb-12 max-w-xl text-xl font-light leading-relaxed text-gray-300 opacity-90">
-              KMRT berdiri sebagai benteng independen melawan praktik korupsi di
-              Tasikmalaya. Kami bergerak dengan integritas untuk mewujudkan tata
-              kelola pemerintahan yang bersih dan transparans.
-            </p> */}
+            {/* Pull-quote */}
+            <blockquote className="mb-6 border-l-2 border-[#b91c1c] pl-4 text-sm italic text-gray-500">
+              &ldquo;Lihat, Dengar, Rasakan, dan Lakukan!&rdquo;
+            </blockquote>
 
-            <div className="flex w-full flex-col gap-5 sm:w-auto sm:flex-row">
+            {/* Deskripsi */}
+            <p className="mb-8 max-w-lg text-base font-light leading-relaxed text-gray-400">
+              KMRT berdiri sebagai benteng independen melawan praktik korupsi di
+              Tasikmalaya. Bergerak dengan integritas untuk mewujudkan tata
+              kelola pemerintahan yang bersih dan transparan.
+            </p>
+
+            {/* CTA Buttons */}
+            <div className="flex flex-col gap-3 sm:flex-row">
               <Link
                 href="/pengaduan"
-                className="rounded-sm bg-[#b91c1c] px-8 py-4 text-center text-sm font-bold uppercase tracking-widest text-white shadow-2xl transition-colors hover:bg-[#991b1b]"
+                className="bg-[#b91c1c] px-8 py-4 text-center text-sm font-bold uppercase tracking-widest text-white shadow-2xl transition-colors hover:bg-[#991b1b]"
               >
                 Laporkan Ketidakadilan
               </Link>
               <Link
                 href="/tentang"
-                className="rounded-sm border border-gray-700 bg-transparent px-8 py-4 text-center text-sm font-semibold uppercase tracking-widest text-white transition-colors hover:bg-white/5"
+                className="border border-gray-700 px-8 py-4 text-center text-sm font-semibold uppercase tracking-widest text-white transition-colors hover:bg-white/5"
               >
                 Profil Organisasi
               </Link>
             </div>
+
+            {/* Stats */}
+            <div className="mt-10 flex gap-8 border-t border-gray-800 pt-8">
+              {[
+                { num: "20+", label: "Tahun Bergerak" },
+                { num: "50+", label: "Kasus Advokasi" },
+                { num: "1K+", label: "Anggota Aktif" },
+              ].map((s) => (
+                <div key={s.label} className="border-l-2 border-[#b91c1c] pl-3">
+                  <div className="font-serif text-2xl font-bold text-white">
+                    {s.num}
+                  </div>
+                  <div className="mt-0.5 text-xs uppercase tracking-widest text-gray-600">
+                    {s.label}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Scroll hint */}
+            <div className="mt-8 flex items-center gap-2 text-xs uppercase tracking-widest text-gray-700">
+              <svg
+                className="h-4 w-4 animate-bounce"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 9l-7 7-7-7"
+                />
+              </svg>
+              Gulir ke bawah
+            </div>
           </div>
 
-          {/* Kanan: Ilustrasi Mewah (Contoh Placeholder untuk Ilustrasi Vektor Elegan) */}
+          {/* ── KANAN: Foto Slideshow ── */}
           <div className="w-full md:w-2/5">
-            <div className="group relative flex aspect-[3/4] w-full items-center justify-center overflow-hidden rounded-sm border border-gray-800 bg-[#111] p-4 shadow-2xl">
-              {/* Efek Cahaya Halus */}
-              <div className="absolute -inset-1 bg-gradient-to-r from-[#b91c1c]/20 to-transparent opacity-30 blur-2xl transition-opacity group-hover:opacity-50"></div>
-
-              <div className="relative z-10 text-center">
-                {/* Placeholder Ilustrasi: Gunakan SVG Vektor Pedang/Timbangan yang bersih */}
-                <svg
-                  className="mx-auto mb-6 h-24 w-24 text-gray-700 transition-colors duration-500 group-hover:text-[#b91c1c]"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1}
-                    d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-                  />
-                </svg>
-                <h3 className="mb-4 font-serif text-3xl font-bold italic text-white">
-                  {'"Lihat, Dengar, Rasakan, dan Lakukan!"'}
-                </h3>
-              </div>
-
-              {/* Garis Aksen Halus */}
-              <div className="absolute bottom-0 left-0 right-0 h-1 bg-[#b91c1c]"></div>
-            </div>
+            <HeroSlideshow items={fotoHero} />
           </div>
         </div>
       </div>

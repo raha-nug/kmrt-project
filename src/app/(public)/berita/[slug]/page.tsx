@@ -1,21 +1,39 @@
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Calendar, ArrowLeft, Share2 } from "lucide-react";
+import { Calendar, ArrowLeft } from "lucide-react";
 import { getNewsBySlug } from "@/app/dashboard/(home)/berita/actions";
+import ShareButton from "@/components/ui-elements/ShareButton";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
+}
+
+// Bersihkan HTML entities agar prose tidak menampilkan &nbsp; dll
+function sanitizeHtml(html: string): string {
+  return (
+    html
+      .replace(/&nbsp;/g, " ")
+      .replace(/&amp;/g, "&")
+      .replace(/&lt;/g, "<")
+      .replace(/&gt;/g, ">")
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'")
+      // Hapus spasi berlebih di dalam tag (misal: <p>   </p>)
+      .replace(/<p>\s*<\/p>/g, "")
+      .trim()
+  );
 }
 
 export default async function DetailBeritaPage({ params }: PageProps) {
   const { slug } = await params;
   const berita = await getNewsBySlug(slug);
 
-  // Jika slug tidak ditemukan di database, tampilkan halaman 404 otomatis
   if (!berita) {
     notFound();
   }
+
+  const kontenBersih = sanitizeHtml(berita.konten);
 
   return (
     <div className="min-h-screen bg-white pb-20">
@@ -42,19 +60,6 @@ export default async function DetailBeritaPage({ params }: PageProps) {
           <h1 className="mb-6 font-serif text-3xl font-extrabold leading-tight text-gray-950 sm:text-4xl md:text-5xl">
             {berita.judul}
           </h1>
-
-          {/* Pemisah Opsional (Bisa diganti dengan Author jika ada) */}
-          <div className="flex items-center gap-4 border-t border-gray-200 pt-6">
-            <div className="flex h-10 w-10 items-center justify-center bg-gray-950 font-serif font-bold text-white">
-              KM
-            </div>
-            <div>
-              <p className="text-sm font-bold text-gray-900">DPID KMRT</p>
-              <p className="text-xs text-gray-500">
-                Divisi Pengelolaan Informasi & Dokumentasi
-              </p>
-            </div>
-          </div>
         </div>
       </section>
 
@@ -62,30 +67,48 @@ export default async function DetailBeritaPage({ params }: PageProps) {
       <section className="pt-10">
         <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
           {/* Gambar Utama */}
-          <div className="relative mb-12 h-[300px] w-full bg-gray-100 shadow-md sm:h-[400px] md:h-[500px]">
-            <Image
-              src={berita.gambar || "/images/cover/cover-01.png"}
-              alt={berita.judul}
-              fill
-              className="object-cover"
-              priority
-            />
-          </div>
+          {berita.gambar && (
+            <div className="relative mb-12 h-[300px] w-full overflow-hidden bg-gray-100 shadow-md sm:h-[400px] md:h-[500px]">
+              <Image
+                src={berita.gambar}
+                alt={berita.judul}
+                fill
+                className="object-cover"
+                priority
+              />
+            </div>
+          )}
 
-          {/* Area Render HTML */}
-          <article className="prose prose-lg prose-gray prose-headings:font-serif prose-headings:font-bold prose-a:text-[#b91c1c] prose-img:rounded-lg max-w-none">
-            {/* Hati-hati: dangerouslySetInnerHTML digunakan karena data dari RichTextEditor berupa HTML string */}
-            <div dangerouslySetInnerHTML={{ __html: berita.konten }} />
+          {/* Prose — render HTML dari RTE */}
+          <article
+            className={[
+              "prose prose-lg max-w-none",
+              // Tipografi
+              "prose-headings:font-serif prose-headings:font-bold prose-headings:text-gray-950",
+              "prose-p:text-gray-700 prose-p:leading-relaxed",
+              // Link
+              "prose-a:text-[#b91c1c] prose-a:font-semibold prose-a:no-underline hover:prose-a:underline",
+              // Gambar
+              "prose-img:rounded-none prose-img:shadow-md",
+              // Blockquote
+              "prose-blockquote:border-l-[#b91c1c] prose-blockquote:bg-gray-50 prose-blockquote:py-1 prose-blockquote:not-italic",
+              // Strong & em
+              "prose-strong:text-gray-900",
+              // HR
+              "prose-hr:border-gray-200",
+            ].join(" ")}
+          >
+            <div dangerouslySetInnerHTML={{ __html: kontenBersih }} />
           </article>
 
-          {/* Footer Artikel (Share dll) */}
-          <div className="mt-16 flex items-center justify-between border-t border-gray-200 pt-8">
-            <p className="text-sm font-bold uppercase tracking-widest text-gray-500">
-              Akhir dari artikel
+          {/* Footer Artikel */}
+          <div className="mt-16 flex flex-col gap-4 border-t border-gray-200 pt-8 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-sm font-bold uppercase tracking-widest text-gray-400">
+              — Akhir dari artikel —
             </p>
-            <button className="flex items-center gap-2 text-sm font-bold uppercase tracking-widest text-gray-900 transition-colors hover:text-[#b91c1c]">
-              <Share2 className="h-4 w-4" /> Bagikan
-            </button>
+
+            {/* Share button — client component kecil */}
+            <ShareButton judul={berita.judul} />
           </div>
         </div>
       </section>

@@ -1,36 +1,20 @@
 import Image from "next/image";
 import Link from "next/link";
+import { getBerita } from "@/app/dashboard/(home)/berita/actions"; // Sesuaikan path action Anda
 
-export default function NewsGrid() {
-  const headline = {
-    kategori: "INVESTIGASI",
-    judul:
-      "KMRT Serahkan Bukti Baru Kasus Dugaan Korupsi Dana Desa ke Kejaksaan",
-    ringkasan:
-      "Tim investigasi KMRT resmi menyerahkan dokumen tambahan terkait dugaan penyelewengan dana desa senilai miliaran rupiah. Kasus ini melibatkan beberapa pejabat desa di wilayah Kabupaten Tasikmalaya.",
-    tanggal: "15 Januari 2025",
-    slug: "kmrt-serahkan-bukti-baru-korupsi-dana-desa",
-    gambar:
-      "https://images.unsplash.com/photo-1589829085413-56de8ae18c73?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-  };
+export default async function NewsGrid() {
+  // Mengambil 3 berita terbaru (1 untuk headline, 2 untuk side)
+  // Kita asumsikan hanya mengambil yang sudah PUBLISHED
+  const { data: allNews } = await getBerita(1, "", "PUBLISHED");
 
-  const sideNews = [
-    {
-      id: 1,
-      kategori: "ADVOKASI",
-      judul:
-        "KMRT Dampingi Warga Tuntut Transparansi Proyek Infrastruktur Jalan",
-      tanggal: "03 Januari 2025",
-      slug: "kmrt-dampingi-warga-transparansi-proyek",
-    },
-    {
-      id: 2,
-      kategori: "PENDIDIKAN",
-      judul: "Pelatihan Kader Anti-Korupsi Angkatan V Resmi Dibuka",
-      tanggal: "20 Desember 2024",
-      slug: "pelatihan-kader-anti-korupsi-v",
-    },
-  ];
+  // Jika tidak ada berita, jangan tampilkan section atau tampilkan pesan kosong
+  if (!allNews || allNews.length === 0) return null;
+
+  // Berita pertama sebagai Headline
+  const headline = allNews[0];
+
+  // Berita selanjutnya (maksimal 2) sebagai Side News
+  const sideNews = allNews.slice(1, 3);
 
   return (
     <section className="w-full border-b border-gray-100 bg-[#fcfbf9] py-24 md:py-32">
@@ -57,21 +41,22 @@ export default function NewsGrid() {
           <div className="group flex flex-col overflow-hidden border border-gray-100 bg-white transition-all duration-300 hover:border-gray-200 hover:shadow-2xl lg:col-span-7">
             <div className="relative h-72 w-full overflow-hidden sm:h-96">
               <Image
-                src={headline.gambar}
+                src={headline.gambar || "/images/placeholder.jpg"}
                 alt={headline.judul}
-                height={100}
-                width={100}
-                className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                fill 
+                priority 
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                className="object-cover transition-transform duration-700 group-hover:scale-105"
               />
               <div className="absolute inset-0 bg-black/30 transition-colors group-hover:bg-black/10"></div>
             </div>
             <div className="flex flex-grow flex-col p-8 md:p-10">
               <span className="mb-5 w-max border-b border-[#b91c1c] pb-1 text-xs font-bold uppercase tracking-widest text-[#b91c1c]">
-                {headline.kategori}
+                {headline.kategori?.nama || "BERITA"}
               </span>
 
               <Link href={`/berita/${headline.slug}`} className="group">
-                <h3 className="font-seriftracking-tight mb-5 text-3xl font-bold leading-tight text-gray-950 transition-colors group-hover:text-[#b91c1c] md:text-4xl">
+                <h3 className="mb-5 font-serif text-3xl font-bold leading-tight tracking-tight text-gray-950 transition-colors group-hover:text-[#b91c1c] md:text-4xl">
                   {headline.judul}
                 </h3>
               </Link>
@@ -81,7 +66,13 @@ export default function NewsGrid() {
               </p>
 
               <div className="mt-auto flex items-center justify-between border-t border-gray-100 pt-5 text-sm text-gray-400">
-                <span>{headline.tanggal}</span>
+                <span>
+                  {new Date(headline.createdAt).toLocaleDateString("id-ID", {
+                    day: "numeric",
+                    month: "long",
+                    year: "numeric",
+                  })}
+                </span>
                 <Link
                   href={`/berita/${headline.slug}`}
                   className="text-sm font-bold uppercase tracking-widest text-[#b91c1c] hover:underline"
@@ -99,12 +90,13 @@ export default function NewsGrid() {
                 key={news.id}
                 className="group flex cursor-pointer gap-6 border border-gray-100 bg-white p-6 transition-all hover:border-gray-200 hover:shadow-xl"
               >
+                {/* Thumbnail kecil untuk side news atau inisial kategori */}
                 <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-sm bg-gray-950 font-bold text-white transition-colors group-hover:bg-[#b91c1c]">
-                  {news.kategori.substring(0, 1)}
+                  {news.kategori?.nama?.substring(0, 1) || "B"}
                 </div>
                 <div>
                   <span className="mb-2 block text-[10px] font-bold uppercase tracking-widest text-[#b91c1c]">
-                    {news.kategori}
+                    {news.kategori?.nama || "BERITA"}
                   </span>
                   <Link href={`/berita/${news.slug}`}>
                     <h4 className="mb-2 line-clamp-2 font-serif text-base font-bold leading-snug text-gray-950 transition-colors group-hover:text-[#b91c1c]">
@@ -112,11 +104,23 @@ export default function NewsGrid() {
                     </h4>
                   </Link>
                   <p className="text-xs uppercase text-gray-400">
-                    {news.tanggal}
+                    {new Date(news.createdAt).toLocaleDateString("id-ID", {
+                      day: "numeric",
+                      month: "long",
+                      year: "numeric",
+                    })}
                   </p>
                 </div>
               </div>
             ))}
+
+            {/* Tampilkan pesan jika berita samping kosong */}
+            {sideNews.length === 0 && (
+              <div className="border border-dashed p-10 text-center italic text-gray-400">
+                Belum ada berita lainnya.
+              </div>
+            )}
+
             <div className="mt-8 text-center sm:hidden">
               <Link
                 href="/berita"

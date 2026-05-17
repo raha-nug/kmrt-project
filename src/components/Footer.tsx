@@ -74,7 +74,7 @@ export default function Footer() {
             &copy; {new Date().getFullYear()} Koalisi Mahasiswa & Rakyat
             Tasikmalaya. All rights reserved.
           </p>
-          <p className="mt-1">Integritas adalah harga mati.</p>
+          <p className="mt-1">Lihat, Dengar, Rasakan, dan Lakukan!</p>
         </div>
       </div>
     </footer>
